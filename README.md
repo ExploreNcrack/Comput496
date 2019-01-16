@@ -1,2 +1,1 @@
 # Comput496
-Gomoku
