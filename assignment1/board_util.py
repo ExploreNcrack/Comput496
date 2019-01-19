@@ -84,8 +84,47 @@ def coord_to_point(row, col, boardsize):
     NS = boardsize + 1
     return NS * row + col
 
+
+def check_number_of_connect(board, color, position, jump):
+        connect = 1
+        index = position
+        while  True:
+            index += jump
+            if board[index] == 3 or board[index] != color:
+                break
+            connect += 1
+        index = position
+        while True:
+            index -= jump
+            if board[index] == 3 or board[index] != color:
+                break
+            connect += 1
+        return connect
+
 class GoBoardUtil(object):
     
+    @staticmethod
+    def check_game_status(board, color, position, size):
+        """
+        check the position
+        """
+        index = position
+        five_in_a_row = False
+        # top bottom
+        if check_number_of_connect(board, color, position, size+1) == 5:
+            return "game over"
+        # left right
+        elif check_number_of_connect(board, color, position, 1) == 5:
+            return  "game over"
+        # left right diagonal
+        elif check_number_of_connect(board, color, position, size) == 5:
+            return  "game over"
+        # right left diagonal
+        elif check_number_of_connect(board, color, position, size+2) == 5:
+            return  "game over"
+        else: 
+            return "not game over"
+
     @staticmethod
     def generate_legal_moves(board, color):
         """

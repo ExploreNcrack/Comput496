@@ -25,7 +25,15 @@ class GtpConnection():
         board: 
             Represents the current board state.
         """
-        self._debug_mode = debug_mode
+        # initialize a game status variable 
+        # which represents if the game is over or not
+        # if game is over: it is draw or one player win
+        # 0: game not over
+        # 1: black player win
+        # 2: white player win
+        # 3: a draw
+        self.game_status = 0
+        self._debug_mode = debug_mode 
         self.go_engine = go_engine
         self.board = board
         self.commands = {
@@ -236,38 +244,56 @@ class GtpConnection():
             
     def gogui_rules_final_result_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        self.respond("unknown")
+        """ 
+        Three cases:
+            -can not determine
+            -determine one lose one win
+            -a draw/tie
+        """
+        if self.game_status == 0:
+            # game not over yet
+            self.respond("unknown")
+        elif self.game_status == 1:
+            # black win
+            self.respond("black win")
+        elif self.game_status == 2:
+            # white win
+            self.respond("white win")
+        elif len(self.board.get_empty_points()) == 0:
+            # no more empty points
+            self.respond("draw")
+
 
     def play_cmd(self, args):
         """ Modify this function for Assignment 1 """
         """
         play a move args[1] for given color args[0] in {'b','w'}
         """
-        try:
-            board_color = args[0].lower()
-            board_move = args[1]
-            color = color_to_int(board_color)
-            if args[1].lower() == 'pass':
-                self.board.play_move(PASS, color)
-                self.board.current_player = GoBoardUtil.opponent(color)
-                self.respond()
-                return
-            coord = move_to_coord(args[1], self.board.size)
-            if coord:
-                move = coord_to_point(coord[0],coord[1], self.board.size)
-            else:
-                self.error("Error executing move {} converted from {}"
-                           .format(move, args[1]))
-                return
-            if not self.board.play_move(move, color):
-                self.respond("Illegal Move: {}".format(board_move))
-                return
-            else:
-                self.debug_msg("Move: {}\nBoard:\n{}\n".
-                                format(board_move, self.board2d()))
+        board_color = args[0].lower()
+        board_move = args[1]
+        color = color_to_int(board_color)
+        if args[1].lower() == 'pass':
+            self.board.play_move(PASS, color)
+            self.board.current_player = GoBoardUtil.opponent(color)
             self.respond()
-        except Exception as e:
-            self.respond('Error: {}'.format(str(e)))
+            return
+        coord = move_to_coord(args[1], self.board.size)
+        if coord:
+            move = coord_to_point(coord[0],coord[1], self.board.size)
+        else:
+            self.error("Error executing move {} converted from {}"
+                       .format(move, args[1]))
+            return
+        if not self.board.play_move(move, color):
+            self.respond("Illegal Move: {}".format(board_move))
+            return
+        else:
+            self.debug_msg("Move: {}\nBoard:\n{}\n".
+                            format(board_move, self.board2d()))
+        self.respond()
+        self.board.p()
+        c = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
+        print(c)
 
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """

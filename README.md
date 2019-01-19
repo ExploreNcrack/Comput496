@@ -1,5 +1,3 @@
 # Comput496
 
-
-.....
-111
+All Comput 496 Projects are here

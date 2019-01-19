@@ -8,7 +8,7 @@ Implements a basic Go board with functions to:
 
 The board uses a 1-dimensional representation with padding
 """
-
+from sys import stdout
 import numpy as np
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, \
                        PASS, is_black_white, coord_to_point, where1d, MAXSIZE
@@ -61,6 +61,8 @@ class SimpleGoBoard(object):
         self.maxpoint = size * size + 3 * (size + 1)
         self.board = np.full(self.maxpoint, BORDER, dtype = np.int32)
         self._initialize_empty_points(self.board) 
+        print(str(self.board))
+
 
     def copy(self):
         b = SimpleGoBoard(self.size)
@@ -217,3 +219,7 @@ class SimpleGoBoard(object):
                 point - self.NS + 1, 
                 point + self.NS - 1, 
                 point + self.NS + 1]
+
+    def p(self):
+        print(self.board)
+

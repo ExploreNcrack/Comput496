@@ -1,0 +1,35 @@
+Rules of Gomoku:
+-The game starts with an empty board
+-players Black and White alternate to place a stone of their color on a grid point
+(Black goes first)
+-The goal of the game is to create a line of five or more stones of your own color, either horizontally, vertically or diagonally.
+-The first player to achieve that goal wins. If neither player creates five in a row, then the game is a draw.
+
+
+End game condition:
+-one player win (5 color in a row occur on the board)
+-a draw/tie (board is full and no 5 color in a row occur on the board)
+-cannot determine
+
+
+Program structure:
+main program to execute:
+Go0.py (which respond for calling other program to initiating and player strategy for the game)
+|
+|---> simple_board.py  (initiating the board setting for the game)
+|        |
+|---> gtp_connection.py  (handling user comnands)
+		 |
+	  board_util.py  (providing necessary information and functions about the board)
+
+
+Structure of each program:
+
+simple_board.py:
+-board structure
+The board is stored as a one-dimensional array
+-initiate
+The program initiate with validating the board size and then calling reset() for intializing a empty board according to the given size
+
+
+
