@@ -43,7 +43,6 @@ class GtpConnection():
             "boardsize": self.boardsize_cmd,
             "showboard": self.showboard_cmd,
             "clear_board": self.clear_board_cmd,
-            "komi": self.komi_cmd,
             "version": self.version_cmd,
             "known_command": self.known_command_cmd,
             "genmove": self.genmove_cmd,
@@ -208,25 +207,19 @@ class GtpConnection():
 
     def gogui_rules_legal_moves_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        moves = self.board.get_empty_points()
-
-
+        # all empty position are legal move
+        # return all empty position coord
+        board_color = args[0].lower()
+        color = color_to_int(board_color)
+        moves = GoBoardUtil.generate_legal_moves(self.board, color)
         gtp_moves = []
         for move in moves:
             coords = point_to_coord(move, self.board.size)
             gtp_moves.append(format_point(coords))
         sorted_moves = ' '.join(sorted(gtp_moves))
         self.respond(sorted_moves)
-        return
+        return 
         
-        # convert input to lowercase
-        #board_color = args[0].lower()
-        # convert color to integer
-        #color = color_to_int(board_color)
-        # generate legal move based on 
-        #moves = GoBoardUtil.generate_legal_moves(self.board, color)
-        #self.respond()
-        #return
 
     def gogui_rules_side_to_move_cmd(self, args):
         """ We already implemented this function for Assignment 1 """
@@ -302,7 +295,6 @@ class GtpConnection():
             self.debug_msg("Move: {}\nBoard:\n{}\n".
                             format(board_move, self.board2d()))
         self.respond()
-        self.board.p()
         c = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
         print(c)
 
@@ -314,11 +306,9 @@ class GtpConnection():
         move = self.go_engine.get_move(self.board, color)
         move_coord = point_to_coord(move, self.board.size)
         move_as_string = format_point(move_coord)
-        if self.board.is_legal(move, color):
-            self.board.play_move(move, color)
-            self.respond(move_as_string)
-        else:
-            self.respond("Illegal move: {}".format(move_as_string))
+        self.board.play_move(move, color)
+        self.respond(move_as_string)
+        
 
     """
     ==========================================================================

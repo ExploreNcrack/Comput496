@@ -61,7 +61,6 @@ class SimpleGoBoard(object):
         self.maxpoint = size * size + 3 * (size + 1)
         self.board = np.full(self.maxpoint, BORDER, dtype = np.int32)
         self._initialize_empty_points(self.board) 
-        print(str(self.board))
 
 
     def copy(self):
