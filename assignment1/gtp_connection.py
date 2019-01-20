@@ -208,14 +208,25 @@ class GtpConnection():
 
     def gogui_rules_legal_moves_cmd(self, args):
         """ Implement this function for Assignment 1 """
-        # convert input to lowercase
-        board_color = args[0].lower()
-        # convert color to integer
-        color = color_to_int(board_color)
-        # generate legal move based on 
-        moves = GoBoardUtil.generate_legal_moves(self.board, color)
-        self.respond()
+        moves = self.board.get_empty_points()
+
+
+        gtp_moves = []
+        for move in moves:
+            coords = point_to_coord(move, self.board.size)
+            gtp_moves.append(format_point(coords))
+        sorted_moves = ' '.join(sorted(gtp_moves))
+        self.respond(sorted_moves)
         return
+        
+        # convert input to lowercase
+        #board_color = args[0].lower()
+        # convert color to integer
+        #color = color_to_int(board_color)
+        # generate legal move based on 
+        #moves = GoBoardUtil.generate_legal_moves(self.board, color)
+        #self.respond()
+        #return
 
     def gogui_rules_side_to_move_cmd(self, args):
         """ We already implemented this function for Assignment 1 """
