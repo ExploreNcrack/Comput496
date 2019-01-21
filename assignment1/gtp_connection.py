@@ -7,6 +7,7 @@ in the Deep-Go project by Isaac Henrion and Amos Storkey
 at the University of Edinburgh.
 """
 import traceback
+import re
 from sys import stdin, stdout, stderr
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
@@ -171,6 +172,7 @@ class GtpConnection():
 
     def clear_board_cmd(self, args):
         """ clear the board """
+        self.game_status = 0
         self.reset(self.board.size)
         self.respond()
 
@@ -205,15 +207,13 @@ class GtpConnection():
         """ We already implemented this function for Assignment 1 """
         self.respond(str(self.board.size))
 
-    def gogui_rules_legal_moves_cmd(self, args):
+    def gogui_rules_legal_moves_cmd(self,args):
         """ Implement this function for Assignment 1 """
         # all empty position are legal move
         # return all empty position coord
         if self.game_status == 0:
             # not game over
-            board_color = args[0].lower()
-            color = color_to_int(board_color)
-            moves = GoBoardUtil.generate_legal_moves(self.board, color)
+            moves = GoBoardUtil.generate_legal_moves(self.board)
             gtp_moves = []
             for move in moves:
                 coords = point_to_coord(move, self.board.size)
@@ -223,7 +223,7 @@ class GtpConnection():
             return 
         else: 
             # If the game is over, return an empty list.
-            self.respond("[]")
+            self.respond('')
             return
 
     def gogui_rules_side_to_move_cmd(self, args):
@@ -264,11 +264,11 @@ class GtpConnection():
             self.respond("unknown")
         elif self.game_status == 1:
             # black win
-            self.respond("black win")
+            self.respond("black")
         elif self.game_status == 2:
             # white win
-            self.respond("white win")
-        elif len(self.board.get_empty_points()) == 0:
+            self.respond("white")
+        else:
             # no more empty points
             self.respond("draw")
 
@@ -281,7 +281,7 @@ class GtpConnection():
         board_color = args[0].lower()
         # check if the colo is b or w
         if board_color != "b" and board_color != "w":
-            self.respond('illegal move: "%s" wrong color'%(args[0]))
+            self.respond('illegal move: "%s" wrong color'%(args[0].lower()))
             return 
         # board position to play
         board_move = args[1]
@@ -295,18 +295,19 @@ class GtpConnection():
         if coord:
             move = coord_to_point(coord[0],coord[1], self.board.size)
         else:
-            self.respond('illegal move: "%s" wrong coordinate'%(args[1]))
+            self.respond('illegal move: "%s" wrong coordinate'%(args[1].lower()))
             return
         if not self.board.play_move(move, color):
-            self.respond('Illegal Move: "%s" occupied'%(args[1]))
+            self.respond('illegal move: "%s" occupied'%(args[1].lower()))
             return
         status = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
         if status == "game over" and color == 1:
             self.game_status = 1
         elif status == "game over" and color == 2:
             self.game_status = 2
-        print(status)
-        self.respond()
+        elif len(self.board.get_empty_points()) == 0:
+            self.game_status = 3
+        self.respond()       
 
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """
@@ -317,7 +318,16 @@ class GtpConnection():
             move = self.go_engine.get_move(self.board, color)
             move_coord = point_to_coord(move, self.board.size)
             move_as_string = format_point(move_coord)
+            # play the move
             self.board.play_move(move, color)
+            # check game status after play the move
+            status = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
+            if status == "game over" and color == 1:
+                self.game_status = 1
+            elif status == "game over" and color == 2:
+                self.game_status = 2
+            elif len(self.board.get_empty_points()) == 0:
+                self.game_status = 3
             self.respond(move_as_string)
         elif self.game_status == 1 and args[0].lower() == "w":
             self.respond("resign")
