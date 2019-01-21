@@ -209,17 +209,22 @@ class GtpConnection():
         """ Implement this function for Assignment 1 """
         # all empty position are legal move
         # return all empty position coord
-        board_color = args[0].lower()
-        color = color_to_int(board_color)
-        moves = GoBoardUtil.generate_legal_moves(self.board, color)
-        gtp_moves = []
-        for move in moves:
-            coords = point_to_coord(move, self.board.size)
-            gtp_moves.append(format_point(coords))
-        sorted_moves = ' '.join(sorted(gtp_moves))
-        self.respond(sorted_moves)
-        return 
-        
+        if self.game_status == 0:
+            # not game over
+            board_color = args[0].lower()
+            color = color_to_int(board_color)
+            moves = GoBoardUtil.generate_legal_moves(self.board, color)
+            gtp_moves = []
+            for move in moves:
+                coords = point_to_coord(move, self.board.size)
+                gtp_moves.append(format_point(coords))
+            sorted_moves = ' '.join(sorted(gtp_moves))
+            self.respond(sorted_moves)
+            return 
+        else: 
+            # If the game is over, return an empty list.
+            self.respond("[]")
+            return
 
     def gogui_rules_side_to_move_cmd(self, args):
         """ We already implemented this function for Assignment 1 """
@@ -274,6 +279,11 @@ class GtpConnection():
         play a move args[1] for given color args[0] in {'b','w'}
         """
         board_color = args[0].lower()
+        # check if the colo is b or w
+        if board_color != "b" and board_color != "w":
+            self.respond('illegal move: "%s" wrong color'%(args[0]))
+            return 
+        # board position to play
         board_move = args[1]
         color = color_to_int(board_color)
         if args[1].lower() == 'pass':
@@ -285,30 +295,36 @@ class GtpConnection():
         if coord:
             move = coord_to_point(coord[0],coord[1], self.board.size)
         else:
-            self.error("Error executing move {} converted from {}"
-                       .format(move, args[1]))
+            self.respond('illegal move: "%s" wrong coordinate'%(args[1]))
             return
         if not self.board.play_move(move, color):
-            self.respond("Illegal Move: {}".format(board_move))
+            self.respond('Illegal Move: "%s" occupied'%(args[1]))
             return
-        else:
-            self.debug_msg("Move: {}\nBoard:\n{}\n".
-                            format(board_move, self.board2d()))
+        status = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
+        if status == "game over" and color == 1:
+            self.game_status = 1
+        elif status == "game over" and color == 2:
+            self.game_status = 2
+        print(status)
         self.respond()
-        c = GoBoardUtil.check_game_status(self.board.board, color, move, self.board.size)
-        print(c)
 
     def genmove_cmd(self, args):
         """ Modify this function for Assignment 1 """
         """ generate a move for color args[0] in {'b','w'} """
-        board_color = args[0].lower()
-        color = color_to_int(board_color)
-        move = self.go_engine.get_move(self.board, color)
-        move_coord = point_to_coord(move, self.board.size)
-        move_as_string = format_point(move_coord)
-        self.board.play_move(move, color)
-        self.respond(move_as_string)
-        
+        if self.game_status == 0:
+            board_color = args[0].lower()
+            color = color_to_int(board_color)
+            move = self.go_engine.get_move(self.board, color)
+            move_coord = point_to_coord(move, self.board.size)
+            move_as_string = format_point(move_coord)
+            self.board.play_move(move, color)
+            self.respond(move_as_string)
+        elif self.game_status == 1 and args[0].lower() == "w":
+            self.respond("resign")
+        elif self.game_status == 2 and args[0].lower() == "b":
+            self.respond("resign")
+        elif self.game_status == 3:
+            self.respond("pass")
 
     """
     ==========================================================================
@@ -389,22 +405,20 @@ def move_to_coord(point_str, board_size):
     if not 2 <= board_size <= MAXSIZE:
         raise ValueError("board_size out of range")
     s = point_str.lower()
-    if s == "pass":
-        return PASS
     try:
         col_c = s[0]
         if (not "a" <= col_c <= "z") or col_c == "i":
-            raise ValueError
+            return 
         col = ord(col_c) - ord("a")
         if col_c < "i":
             col += 1
         row = int(s[1:])
         if row < 1:
-            raise ValueError
+            return 
     except (IndexError, ValueError):
-        raise ValueError("invalid point: '{}'".format(s))
+        return 
     if not (col <= board_size and row <= board_size):
-        raise ValueError("point off board: '{}'".format(s))
+        return 
     return row, col
 
 def color_to_int(c):
