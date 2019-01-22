@@ -111,16 +111,16 @@ class GoBoardUtil(object):
         index = position
         five_in_a_row = False
         # top bottom
-        if check_number_of_connect(board, color, position, size+1) == 5:
+        if check_number_of_connect(board, color, position, size+1) >= 5:
             return "game over"
         # left right
-        elif check_number_of_connect(board, color, position, 1) == 5:
+        elif check_number_of_connect(board, color, position, 1) >= 5:
             return  "game over"
         # left right diagonal
-        elif check_number_of_connect(board, color, position, size) == 5:
+        elif check_number_of_connect(board, color, position, size) >= 5:
             return  "game over"
         # right left diagonal
-        elif check_number_of_connect(board, color, position, size+2) == 5:
+        elif check_number_of_connect(board, color, position, size+2) >= 5:
             return  "game over"
         else: 
             return "not game over"
