@@ -126,7 +126,7 @@ class GoBoardUtil(object):
             return "not game over"
 
     @staticmethod
-    def generate_legal_moves(board, color):
+    def generate_legal_moves(board):
         """
         generate a list of all legal moves on the board.
         Does not include the Pass move.
