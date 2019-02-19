@@ -30,6 +30,8 @@ class GtpConnection():
         self.go_engine = go_engine
         self.board = board
         self.commands = {
+            "solve": self.solve_cmd,
+            "timelimit": self.timelimit_cmd,
             "protocol_version": self.protocol_version_cmd,
             "quit": self.quit_cmd,
             "name": self.name_cmd,
