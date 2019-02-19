@@ -63,7 +63,8 @@ class GtpConnection():
             "known_command": (1, 'Usage: known_command CMD_NAME'),
             "genmove": (1, 'Usage: genmove {w,b}'),
             "play": (2, 'Usage: play {b,w} MOVE'),
-            "legal_moves": (1, 'Usage: legal_moves {w,b}')
+            "legal_moves": (1, 'Usage: legal_moves {w,b}'),
+            "timelimit_cmd": (1, 'Usage: timelimit_cmd inSecond')
         }
     
     def write(self, data):
@@ -148,6 +149,21 @@ class GtpConnection():
     def board2d(self):
         return str(GoBoardUtil.get_twoD_board(self.board))
         
+
+    def solve_cmd(self):
+        """
+        
+        """
+        pass
+
+    def timelimit_cmd(self, args):
+        """
+        Setting time to count down
+        Input: time in second
+        args[0] for the input
+        """
+        pass
+
     def protocol_version_cmd(self, args):
         """ Return the GTP protocol version being used (always 2) """
         self.respond('2')
