@@ -295,7 +295,7 @@ class GtpConnection():
         except Exception as e:
             self.respond('{}'.format(str(e)))
 
-    def genmove_cmd(self, args):
+    def genmove_cmd(self, args): 
         """
         This player will play randomly at first, but will then play a perfect endgame as soon as it can solve the game.
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
@@ -304,22 +304,55 @@ class GtpConnection():
         color = color_to_int(board_color)
         game_end, winner = self.board.check_game_end_gomoku()
         if game_end:
-            if winner == color:
+            return
+
+        if run_with_limited_time = False:                    #out of timelimit and randomplay#
+            move = self.go_engine.get_move(self.board, color)
+            if move == PASS:
                 self.respond("pass")
+                return
+            move_coord = point_to_coord(move, self.board.size)
+            move_as_string = format_point(move_coord)
+            if self.board.is_legal_gomoku(move, color):
+                self.board.play_move_gomoku(move, color)
+                self.respond(move_as_string)
             else:
-                self.respond("resign")
-            return
-        move = self.go_engine.get_move(self.board, color)
-        if move == PASS:
-            self.respond("pass")
-            return
-        move_coord = point_to_coord(move, self.board.size)
-        move_as_string = format_point(move_coord)
-        if self.board.is_legal_gomoku(move, color):
-            self.board.play_move_gomoku(move, color)
-            self.respond(move_as_string)
-        else:
-            self.respond("illegal move: {}".format(move_as_string))
+                self.respond("illegal move: {}".format(move_as_string))
+        else:   #in of timelimit and randomplay#
+            final_winner = self.solve_cmd(self)[0]
+            if final_winner == color: #use solver to find best move#
+                move = self.solve_cmd(self)[1]
+                if move == PASS:
+                    self.respond("pass")
+                    return
+                move_coord = point_to_coord(move, self.board.size)
+                move_as_string = format_point(move_coord)
+                if self.board.is_legal_gomoku(move, color):
+                    self.board.play_move_gomoku(move, color)
+                    self.respond(move_as_string)
+                else:
+                    self.respond("illegal move: {}".format(move_as_string))
+            else:         #finil winer is oponent, then randomly play#
+                move = self.go_engine.get_move(self.board, color)
+                if move == PASS:
+                    self.respond("pass")
+                    return
+                move_coord = point_to_coord(move, self.board.size)
+                move_as_string = format_point(move_coord)
+                if self.board.is_legal_gomoku(move, color):
+                    self.board.play_move_gomoku(move, color)
+                    self.respond(move_as_string)
+                else:
+                    self.respond("illegal move: {}".format(move_as_string))
+
+                
+
+
+
+
+
+
+       
 
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
