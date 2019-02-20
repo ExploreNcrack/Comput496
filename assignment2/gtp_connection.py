@@ -354,15 +354,6 @@ class GtpConnection():
 
 
 
-                
-
-
-
-
-
-
-       
-
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
     
