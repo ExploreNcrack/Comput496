@@ -310,7 +310,7 @@ class GtpConnection():
         if game_end:
             return
 
-        if run_with_limited_time = False:                    #out of timelimit and randomplay#
+        if self.run_with_limited_time(solve) == False:                    #out of timelimit and randomplay#
             move = self.go_engine.get_move(self.board, color)
            
             move_coord = point_to_coord(move, self.board.size)
