@@ -308,9 +308,7 @@ class GtpConnection():
 
         if run_with_limited_time = False:                    #out of timelimit and randomplay#
             move = self.go_engine.get_move(self.board, color)
-            if move == PASS:
-                self.respond("pass")
-                return
+           
             move_coord = point_to_coord(move, self.board.size)
             move_as_string = format_point(move_coord)
             if self.board.is_legal_gomoku(move, color):
@@ -322,9 +320,7 @@ class GtpConnection():
             final_winner = self.solve_cmd(self)[0]
             if final_winner == color: #use solver to find best move#
                 move = self.solve_cmd(self)[1]
-                if move == PASS:
-                    self.respond("pass")
-                    return
+                
                 move_coord = point_to_coord(move, self.board.size)
                 move_as_string = format_point(move_coord)
                 if self.board.is_legal_gomoku(move, color):
@@ -332,11 +328,9 @@ class GtpConnection():
                     self.respond(move_as_string)
                 else:
                     self.respond("illegal move: {}".format(move_as_string))
-            else:         #finil winer is oponent, then randomly play#
+            elif:         #finil winer is oponent, then randomly play#
                 move = self.go_engine.get_move(self.board, color)
-                if move == PASS:
-                    self.respond("pass")
-                    return
+                
                 move_coord = point_to_coord(move, self.board.size)
                 move_as_string = format_point(move_coord)
                 if self.board.is_legal_gomoku(move, color):
@@ -344,6 +338,17 @@ class GtpConnection():
                     self.respond(move_as_string)
                 else:
                     self.respond("illegal move: {}".format(move_as_string))
+            elif final_winner == draw: #final status is draw,try to find best move #
+                move = self.solve_cmd(self)[1]
+                move_coord = point_to_coord(move, self.board.size)
+                move_as_string = format_point(move_coord)
+                if self.board.is_legal_gomoku(move, color):
+                    self.board.play_move_gomoku(move, color)
+                    self.respond(move_as_string)
+                else:
+                    self.respond("illegal move: {}".format(move_as_string))
+
+
 
                 
 
