@@ -12,6 +12,7 @@ from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
 import re
+from solver import *
 
 class GtpConnection():
 
@@ -169,8 +170,11 @@ class GtpConnection():
         """
 
         # first start with the current play (toPlay) going first:
-        # -
-        pass
+        result = self.run_with_limited_time(Search(self.board))
+        if result == False:
+            # unknown 
+            self.respond("unknown")
+    
 
     def timelimit_cmd(self, args):
         """
