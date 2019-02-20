@@ -152,8 +152,24 @@ class GtpConnection():
 
     def solve_cmd(self):
         """
-        
+        Your GTP response should be in the format:
+        = winner [move]
+        ---------------------------------------------------------------------
+        Solving always starts with the current player (toPlay) going first.
+        ---------------------------------------------------------------------
+        winner is either b, w, draw, or unknown.
+        unknown: if your solver cannot solve the game within the current time limit
+        ---------------------------------------------------------------------
+        If the winner is toPlay or if its a draw, 
+        then also write a move that you found that achieves this best possible result.
+        If there are several best moves, 
+        then write any one of them.
+        If the winner is the opponent or unknown, 
+        then do not write any move in your GTP response.
         """
+
+        # first start with the current play (toPlay) going first:
+        # -
         pass
 
     def timelimit_cmd(self, args):
@@ -281,6 +297,7 @@ class GtpConnection():
 
     def genmove_cmd(self, args): 
         """
+        This player will play randomly at first, but will then play a perfect endgame as soon as it can solve the game.
         Generate a move for the color args[0] in {'b', 'w'}, for the game of gomoku.
         """
         board_color = args[0].lower()
