@@ -169,7 +169,7 @@ class GtpConnection():
         """
 
         # first start with the current play (toPlay) going first:
-        # -
+        
         pass
 
     def timelimit_cmd(self, args):
