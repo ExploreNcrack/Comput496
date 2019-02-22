@@ -170,6 +170,7 @@ class GtpConnection():
         """
 
         # first start with the current play (toPlay) going first:
+        # Search() in solver.py
         result = self.run_with_limited_time(Search(self.board))
         if result == False:
             # unknown 
