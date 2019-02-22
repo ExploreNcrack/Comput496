@@ -68,6 +68,7 @@ class SimpleGoBoard(object):
         Creates a Go board of given size
         """
         assert 2 <= size <= MAXSIZE
+        self.moves = []
         self.reset(size)
 
     def reset(self, size):
@@ -349,7 +350,24 @@ class SimpleGoBoard(object):
         self.board[point] = color
         self.current_player = GoBoardUtil.opponent(color)
         return True
-        
+
+    def undoMove(self):
+        """
+        Go back to the previous board state 
+        by 
+        """
+        point = self.moves.pop()
+        self.board[point] = EMPTY
+
+    def code(self):
+        """
+        hash code 
+        """
+        c = 0
+        for i in range(self.size):
+            c = 3*c + self.board[i]
+        return c
+
     def _point_direction_check_connect_gomoko(self, point, shift):
         """
         Check if the point has connect5 condition in a direction
