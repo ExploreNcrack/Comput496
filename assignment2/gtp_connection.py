@@ -7,12 +7,30 @@ in the Deep-Go project by Isaac Henrion and Amos Storkey
 at the University of Edinburgh.
 """
 import traceback
+import signal
+from contextlib import contextmanager
 from sys import stdin, stdout, stderr
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
 import re
 from solver import *
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
+
+
 
 class GtpConnection():
 
@@ -30,6 +48,7 @@ class GtpConnection():
         self._debug_mode = debug_mode
         self.go_engine = go_engine
         self.board = board
+        self.limit=1
         self.commands = {
             "solve": self.solve_cmd,
             "timelimit": self.timelimit_cmd,
@@ -151,7 +170,7 @@ class GtpConnection():
         return str(GoBoardUtil.get_twoD_board(self.board))
         
 
-    def solve_cmd(self):
+    def solve_cmd(self,args):
         """
         Your GTP response should be in the format:
         = winner [move]
@@ -171,10 +190,16 @@ class GtpConnection():
 
         # first start with the current play (toPlay) going first:
         # Search() in solver.py
-        result = self.run_with_limited_time(Search(self.board))
-        if result == False:
+        
+        try:
+            with time_limit(int(self.limit)):
+                Search(self.board)
+        except TimeoutException as e:
+            self.respond("unknown")       
+       # result = self.run_with_limited_time(Search(self.board))
+       # if result == False:
             # unknown 
-            self.respond("unknown")
+            #self.respond("unknown")
     
 
     def timelimit_cmd(self, args):
@@ -183,7 +208,7 @@ class GtpConnection():
         Input: time in second
         args[0] for the input
         """
-        self.limit = args
+        self.limit = args[0]
        
     def run_with_limited_time(self,func):
         """Runs a function with time limit
@@ -333,16 +358,7 @@ class GtpConnection():
                     self.respond(move_as_string)
                 else:
                     self.respond("illegal move: {}".format(move_as_string))
-            elif:         #finil winer is oponent, then randomly play#
-                move = self.go_engine.get_move(self.board, color)
-                
-                move_coord = point_to_coord(move, self.board.size)
-                move_as_string = format_point(move_coord)
-                if self.board.is_legal_gomoku(move, color):
-                    self.board.play_move_gomoku(move, color)
-                    self.respond(move_as_string)
-                else:
-                    self.respond("illegal move: {}".format(move_as_string))
+
             elif final_winner == draw: #final status is draw,try to find best move #
                 move = self.solve_cmd(self)[1]
                 move_coord = point_to_coord(move, self.board.size)
@@ -352,6 +368,16 @@ class GtpConnection():
                     self.respond(move_as_string)
                 else:
                     self.respond("illegal move: {}".format(move_as_string))
+            else:         #final winer is oponent, then randomly play#
+                move = self.go_engine.get_move(self.board, color)
+                
+                move_coord = point_to_coord(move, self.board.size)
+                move_as_string = format_point(move_coord)
+                if self.board.is_legal_gomoku(move, color):
+                    self.board.play_move_gomoku(move, color)
+                    self.respond(move_as_string)
+                else:
+                    self.respond("illegal move: {}".format(move_as_string))            
 
 
 
