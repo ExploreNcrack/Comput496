@@ -359,6 +359,7 @@ class SimpleGoBoard(object):
         """
         point = self.moves.pop()
         self.board[point] = EMPTY
+        self.current_player = GoBoardUtil.opponent(self.current_player)
 
     def code(self):
         """

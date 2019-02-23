@@ -193,10 +193,10 @@ class GtpConnection():
              0: draw
         Call negamax to find out the result 
         """
-        result = self.negamaxBoolean(state)
-        winners = ["black","white"]
         me = state.current_player  # int type
         opponent = GoBoardUtil.opponent(me)  # int type
+        result = self.negamaxBoolean(state)
+        winners = ["b","w"]
         if result == 0:
             # result is draw
             self.respond("draw %s"%(str(self.drawMove[0])))
