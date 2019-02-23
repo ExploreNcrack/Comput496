@@ -84,7 +84,7 @@ class GtpConnection():
             "genmove": (1, 'Usage: genmove {w,b}'),
             "play": (2, 'Usage: play {b,w} MOVE'),
             "legal_moves": (1, 'Usage: legal_moves {w,b}'),
-            "timelimit_cmd": (1, 'Usage: timelimit_cmd inSecond')
+            "timelimit": (1, 'Usage: timelimit inSecond')
         }
     
     def write(self, data):
@@ -218,8 +218,8 @@ class GtpConnection():
              0: draw
         Call negamax to find out the result 
         """
-        self.winningMove = [""] 
-        self.drawMove = [""]
+        # self.winningMove = [""] 
+        # self.drawMove = [""]
         self.FinalWinner = "unknown"
         me = state.current_player  # int type
         opponent = GoBoardUtil.opponent(me)  # int type
@@ -229,17 +229,17 @@ class GtpConnection():
             # result is draw
             self.FinalWinner = "unknown"
             self.respond("draw %s"%(str(self.drawMove[0])))
-            print("aaaaa")
+            # print("aaaaa")
         elif result == -1:
             # result is lose
             self.FinalWinner = winners[opponent-1]
             self.respond("%s"%(winners[opponent-1]))
-            print("bbbbb")
+            # print("bbbbb")
         elif result == 1:
             # result is win
             self.FinalWinner = winners[me-1]
             self.respond("%s %s"%(winners[me-1], str(self.winningMove[0])))
-            print("ccccc")
+            # print("ccccc")
 
     def negamaxBoolean(self, state):
         """
@@ -261,6 +261,10 @@ class GtpConnection():
             # draw condition
             return 0
         # game not ended yet continue to search (go deeper level in the game tree)
+
+        # sort all possible move (in an decreasing order) according to how likely the move will lead to win
+        # allPossibleMove = self.moveOrdering(state, allPossibleMove)
+
         drawBest = False # flag to indicate over all possible move the best possible result will be draw result
         for m in allPossibleMove:
             state.play_move_gomoku(m,state.current_player)
@@ -280,6 +284,17 @@ class GtpConnection():
             return 0
         return -1
 
+    def moveOrdering(self, state, allPossibleMove):
+        """
+        evaluate the board state
+        evaluate and assign a score to each possible move 
+        Sort the list of all possible moves according to the score
+        """
+        # evaluate the board state
+
+        pass
+
+
     def timelimit_cmd(self, args):
         """
         Setting time to count down
@@ -287,6 +302,7 @@ class GtpConnection():
         args[0] for the input
         """
         self.limit = args[0]
+
        
     def run_with_limited_time(self,func):
         """Runs a function with time limit
@@ -435,7 +451,7 @@ class GtpConnection():
                 
                 
         if self.FinalWinner == board_color: #use solver to find best move#
-            print("has winning move")
+            # print("has winning move")
             move = self.winningMove[0]
             coord = move_to_coord(move, self.board.size)
             point = coord_to_point(coord[0],coord[1],self.board.size)      
@@ -447,7 +463,7 @@ class GtpConnection():
  
                    
         else :         #final winer is oponent, then randomly play
-            print("lose")
+            # print("lose")
             move = self.go_engine.get_move(self.board, color)
         
             move_coord = point_to_coord(move, self.board.size)

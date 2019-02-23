@@ -24,6 +24,7 @@ play w a5
 play b c5
 00 solve
 #? [draw D5]
+showboard
 # board condition for above case
 # [[1 1 2 1 2]
 #  [1 1 2 1 2]
@@ -56,6 +57,7 @@ play w e2
 play b e5
 01 solve
 #? [w C5]
+showboard
 # board condition for above case
 # [[1 1 2 1 2]
 #  [1 1 2 1 2]
@@ -87,6 +89,7 @@ play b d3
 play w e2
 02 solve
 #? [b A5]
+showboard
 # board condition for above case
 # [[1 1 2 1 2]
 #  [1 1 2 1 2]
