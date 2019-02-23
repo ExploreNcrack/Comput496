@@ -7,11 +7,30 @@ in the Deep-Go project by Isaac Henrion and Amos Storkey
 at the University of Edinburgh.
 """
 import traceback
+import signal
+from contextlib import contextmanager
 from sys import stdin, stdout, stderr
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
 import re
+
+class TimeoutException(Exception): pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
+
+
+
+
 
 class GtpConnection():
 
@@ -29,6 +48,7 @@ class GtpConnection():
         self._debug_mode = debug_mode
         self.go_engine = go_engine
         self.board = board
+        self.limit = 1
         self.commands = {
             "solve": self.solve_cmd,
             "timelimit": self.timelimit_cmd,
@@ -174,7 +194,12 @@ class GtpConnection():
         self.winningMove = [""] 
         # this will store the move that will lead to draw
         self.drawMove = [""]
-        self.Search(self.board)
+        #self.Search(self.board)
+        try:
+            with time_limit(int(self.limit)):
+                self.Search(self.board)
+        except TimeoutException as e:
+            self.respond("unknown")         
         # result = self.run_with_limited_time(self.Search(self.board))
         # if result == False:
         #     # this means that after timeout 
@@ -193,22 +218,28 @@ class GtpConnection():
              0: draw
         Call negamax to find out the result 
         """
+        self.winningMove = [""] 
+        self.drawMove = [""]
+        self.FinalWinner = "unknown"
         me = state.current_player  # int type
         opponent = GoBoardUtil.opponent(me)  # int type
         result = self.negamaxBoolean(state)
         winners = ["b","w"]
         if result == 0:
             # result is draw
+            self.FinalWinner = "unknown"
             self.respond("draw %s"%(str(self.drawMove[0])))
+            print("aaaaa")
         elif result == -1:
             # result is lose
             self.FinalWinner = winners[opponent-1]
             self.respond("%s"%(winners[opponent-1]))
+            print("bbbbb")
         elif result == 1:
             # result is win
             self.FinalWinner = winners[me-1]
             self.respond("%s %s"%(winners[me-1], str(self.winningMove[0])))
-
+            print("ccccc")
 
     def negamaxBoolean(self, state):
         """
@@ -255,7 +286,7 @@ class GtpConnection():
         Input: time in second
         args[0] for the input
         """
-        self.limit = args
+        self.limit = args[0]
        
     def run_with_limited_time(self,func):
         """Runs a function with time limit
@@ -382,6 +413,56 @@ class GtpConnection():
         game_end, winner = self.board.check_game_end_gomoku()
         if game_end:
             return
+        
+
+        try:
+            with time_limit(int(self.limit)):
+                #print("start search")
+                self.Search(self.board)
+                #print("winning move",self.winningMove[0])
+                #print("draw move",self.drawMove[0])
+                #print("final winner:",self.FinalWinner)
+                
+        except TimeoutException as e:
+            #out of timelimit and randomplay
+            print("exception")
+            move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
+           
+            move_coord = point_to_coord(move, self.board.size)
+            move_as_string = format_point(move_coord)
+            self.board.play_move_gomoku(move, color)
+            self.respond(move_as_string)
+                
+                
+        if self.FinalWinner == board_color: #use solver to find best move#
+            print("has winning move")
+            move = self.winningMove[0]
+            coord = move_to_coord(move, self.board.size)
+            point = coord_to_point(coord[0],coord[1],self.board.size)      
+            self.board.play_move_gomoku(point, color)
+
+        elif self.FinalWinner == "unknown": #final status is draw,try to find best move #
+            move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
+            self.board.play_move_gomoku(move, color)            
+ 
+                   
+        else :         #final winer is oponent, then randomly play
+            print("lose")
+            move = self.go_engine.get_move(self.board, color)
+        
+            move_coord = point_to_coord(move, self.board.size)
+         
+
+   
+
+
+
+        
+        
+        
+        
+        
+        
 
         # if self.run_with_limited_time(solve) == False:                    #out of timelimit and randomplay#
         #     move = self.go_engine.get_move(self.board, color)
@@ -424,6 +505,11 @@ class GtpConnection():
         #             self.respond(move_as_string)
         #         else:
         #             self.respond("illegal move: {}".format(move_as_string))
+        
+        
+        
+        
+        
 
 
 
