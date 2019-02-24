@@ -63,12 +63,29 @@ class SimpleGoBoard(object):
         """
         return where1d(self.board == EMPTY)
 
+    def get_non_empty_points(self):
+        blackPoints = self.get_black_point()
+        whitePoints = self.get_white_point()
+        return list(blackPoints)+list(whitePoints)
+
+    def get_black_point(self):
+        return where1d(self.board == BLACK)
+
+    def get_white_point(self):
+        return where1d(self.board == WHITE)
+
+    def get_current_player_points(self):
+        return where1d(self.board == self.current_player)
+
+    def get_oppoent_points(self):
+        return where1d(self.board == GoBoardUtil.opponent(self.current_player))
+
     def __init__(self, size):
         """
         Creates a Go board of given size
         """
         assert 2 <= size <= MAXSIZE
-        self.moves = []
+        self.evaluate = {1:1, 2:500, 3:1300, 4:2000, 5:100000}
         self.reset(size)
 
     def reset(self, size):
@@ -78,6 +95,7 @@ class SimpleGoBoard(object):
         See GoBoardUtil.coord_to_point for explanations of the array encoding
         """
         self.size = size
+        self.moves = []
         self.NS = size + 1
         self.WE = 1
         self.ko_recapture = None
@@ -438,3 +456,113 @@ class SimpleGoBoard(object):
                 return True, BLACK
 
         return False, None
+
+
+    def check_direction_connect_and_compute_score(self, point, shift):
+        color = self.current_player
+        count = 1
+        d = shift
+        p = point
+        openEnd = 2
+        BorderEnd = 0
+        length = 0
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+            else:
+                if self.board[p] == EMPTY:
+                    tmpP = p
+                    while self.board[tmpP] == EMPTY:
+                        length += 1
+                        tmpP += d
+                if self.board[p] != EMPTY:
+                    # closed end
+                    openEnd -= 1
+                if self.board[p] == BORDER:
+                    BorderEnd += 1
+                break
+        d = -d
+        p = point
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+            else:
+                if self.board[p] == EMPTY:
+                    tmpP = p
+                    while self.board[tmpP] == EMPTY:
+                        length += 1
+                        tmpP += d
+                if self.board[p] != EMPTY:
+                    # closed end
+                    openEnd -= 1
+                if self.board[p] == BORDER:
+                    BorderEnd += 1
+                break
+        # do evaluation 
+        if count > 5:
+            score = self.evaluate[5]
+        else:
+            score = self.evaluate[count]
+        if length + count < 5:
+            score -= self.evaluate[count]/2
+            score -= 3
+        if count != 5:
+            if openEnd == 0 and BorderEnd != 2:
+                score -= self.evaluate[count]/2
+                score -= 3
+            if openEnd == 1 and BorderEnd != 2:
+                score -= self.evaluate[count]/3
+        return score
+
+
+    def evaluate_move_on_attack(self, point):
+        score = 0
+        # check horizontal
+        score += self.check_direction_connect_and_compute_score(point, 1)
+        # check vertical
+        score += self.check_direction_connect_and_compute_score(point, self.NS)
+        # check y=x
+        score += self.check_direction_connect_and_compute_score(point, self.NS+1)
+        # check y=-x
+        score += self.check_direction_connect_and_compute_score(point, self.NS-1)
+        return score
+
+    def ScanBoard(self, possibleMoves):
+        """
+        check each move and evaluate a score to each move 
+        according to the 
+        -attack
+        -defend
+        then sort the moves list according to the score
+        """
+        possibleMovesWithScore = []
+        for m in possibleMoves:
+            possibleMovesWithScore.append([m,0])
+        # attack evaluation
+        for index,move in enumerate(possibleMovesWithScore):
+            # move[0]: move position  
+            score = self.evaluate_move_on_attack(move[0])
+            possibleMovesWithScore[index][1] += score
+            if score == 100000:
+                # check first
+                # if we have 5-connect after the move and about to win
+                possibleMoves[0] = move
+                return
+        # defense evaluation
+        # for index,move in enumerate(possibleMovesWithScore):
+        #     # move[0]: move position
+        #     score = self.evaluate_move_on_defend(move[0])
+        #     possibleMovesWithScore[index][1] += score
+        #     if score == 100000:
+        #         possibleMoves[0] = move
+        #         return
+        # sort the possible move list according to the score
+        possibleMovesWithScore.sort(key=lambda x:x[1], reverse=True)
+        for index,move in enumerate(possibleMovesWithScore):
+            possibleMoves[index] = move[0]
+            if move[1] == 4:
+                self.board[move[0]] = 6
+        print(possibleMovesWithScore)
+
