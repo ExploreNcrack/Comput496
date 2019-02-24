@@ -302,23 +302,11 @@ class GtpConnection():
         args[0] for the input
         """
         self.limit = args[0]
+        self.respond("")
+        
 
        
-    def run_with_limited_time(self,func):
-        """Runs a function with time limit
-
-        :param func: The function to run
-
-        :return: True if the function ended successfully. False if it was terminated.
-        """
-        p = Process(target=func)
-        p.start()
-        p.join(self.limit)
-        if p.is_alive():
-            p.terminate()
-            return False
-
-        return True  
+    
 
     def protocol_version_cmd(self, args):
         """ Return the GTP protocol version being used (always 2) """
