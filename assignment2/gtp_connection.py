@@ -312,10 +312,6 @@ class GtpConnection():
         """
         self.limit = args[0]
         self.respond("")
-<<<<<<< HEAD
-=======
-        
->>>>>>> 2589cf2395304e5101658cbe7ce26a498bbe1c28
 
        
     
