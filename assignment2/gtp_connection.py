@@ -267,7 +267,7 @@ class GtpConnection():
 
         # sort all possible move (in an decreasing order) according to how likely the move will lead to win
         # allPossibleMove = self.moveOrdering(state, allPossibleMove)
-        # state.ScanBoard(allPossibleMove)
+        state.ScanBoard(allPossibleMove)
         drawBest = False # flag to indicate over all possible move the best possible result will be draw result
         for m in allPossibleMove:
             state.play_move_gomoku(m,state.current_player)

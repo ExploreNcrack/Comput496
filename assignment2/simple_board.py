@@ -85,7 +85,8 @@ class SimpleGoBoard(object):
         Creates a Go board of given size
         """
         assert 2 <= size <= MAXSIZE
-        self.evaluate = {1:1, 2:500, 3:1300, 4:2000, 5:100000}
+        self.evaluateOnAttack = {1:1, 2:500, 3:1300, 4:2000, 5:100000}
+        self.evaluateOnDefend = {0:0, 1:200, 2:400, 3:2100, 4:100000}
         self.reset(size)
 
     def reset(self, size):
@@ -114,6 +115,7 @@ class SimpleGoBoard(object):
         b.current_player = self.current_player
         assert b.maxpoint == self.maxpoint
         b.board = np.copy(self.board)
+        b.moves = self.moves
         return b
 
     def row_start(self, row):
@@ -458,7 +460,7 @@ class SimpleGoBoard(object):
         return False, None
 
 
-    def check_direction_connect_and_compute_score(self, point, shift):
+    def check_direction_connect_and_compute_score_attck(self, point, shift):
         color = self.current_player
         count = 1
         d = shift
@@ -502,35 +504,76 @@ class SimpleGoBoard(object):
                 break
         # do evaluation 
         if count > 5:
-            score = self.evaluate[5]
+            score = self.evaluateOnAttack[5]
         else:
-            score = self.evaluate[count]
+            score = self.evaluateOnAttack[count]
         if length + count < 5:
-            score -= self.evaluate[count]/2
+            score -= self.evaluateOnAttack[count]/2
             score -= 3
         if length + count > 5:
             score += 1.3**(length + count-5)
-        if count != 5:
+        if count < 5:
             if openEnd == 0 and BorderEnd != 2:
-                score -= self.evaluate[count]/2
+                score -= self.evaluateOnAttack[count]/2
                 score -= 3
             if openEnd == 1 and BorderEnd != 2:
-                score -= self.evaluate[count]/3
+                score -= self.evaluateOnAttack[count]/3
+        return score
+
+    def check_direction_block_connect_and_compute_score_defend(self, point, shift):
+        color = GoBoardUtil.opponent(self.current_player)
+        count = 0
+        d = shift
+        p = point
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+            else:
+                break
+        if count > 4:
+            score = self.evaluateOnDefend[4]
+        else:
+            score = self.evaluateOnDefend[count]
+        count = 0
+        d = -d
+        p = point
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+            else:
+                break
+        if count > 4:
+            score += self.evaluateOnDefend[4]
+        else:
+            score += self.evaluateOnDefend[count]
         return score
 
 
     def evaluate_move_on_attack(self, point):
         score = 0
         # check horizontal
-        score += self.check_direction_connect_and_compute_score(point, 1)
+        score += self.check_direction_connect_and_compute_score_attck(point, 1)
         # check vertical
-        score += self.check_direction_connect_and_compute_score(point, self.NS)
+        score += self.check_direction_connect_and_compute_score_attck(point, self.NS)
         # check y=x
-        score += self.check_direction_connect_and_compute_score(point, self.NS+1)
+        score += self.check_direction_connect_and_compute_score_attck(point, self.NS+1)
         # check y=-x
-        score += self.check_direction_connect_and_compute_score(point, self.NS-1)
+        score += self.check_direction_connect_and_compute_score_attck(point, self.NS-1)
         return score
 
+    def evaluate_move_on_defend(self, point):
+        score = 0
+        # check horizontal
+        score += self.check_direction_block_connect_and_compute_score_defend(point, 1)
+        # check vertical
+        score += self.check_direction_block_connect_and_compute_score_defend(point, self.NS)
+        # check y=x
+        score += self.check_direction_block_connect_and_compute_score_defend(point, self.NS+1)
+        # check y=-x
+        score += self.check_direction_block_connect_and_compute_score_defend(point, self.NS-1)
+        return score 
 
     def ScanBoard(self, possibleMoves):
         """
@@ -548,19 +591,20 @@ class SimpleGoBoard(object):
             # move[0]: move position  
             score = self.evaluate_move_on_attack(move[0])
             possibleMovesWithScore[index][1] += score
-            if score == 100000:
+            if score >= 100000:
                 # check first
-                # if we have 5-connect after the move and about to win
-                possibleMoves[0] = move
+                # if we have 5-connect after the move and about to win 
+                possibleMoves[index] = possibleMoves[0]
+                possibleMoves[0] = move[0]
                 return
+        # check if opponent win immediately
+
         # defense evaluation
         # for index,move in enumerate(possibleMovesWithScore):
-        #     # move[0]: move position
+        # #     # move[0]: move position
         #     score = self.evaluate_move_on_defend(move[0])
         #     possibleMovesWithScore[index][1] += score
-        #     if score == 100000:
-        #         possibleMoves[0] = move
-        #         return
+            
         # sort the possible move list according to the score
         possibleMovesWithScore.sort(key=lambda x:x[1], reverse=True)
         for index,move in enumerate(possibleMovesWithScore):
