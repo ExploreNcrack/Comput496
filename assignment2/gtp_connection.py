@@ -196,11 +196,13 @@ class GtpConnection():
         # this will store the move that will lead to draw
         self.drawMove = [""]
         #self.Search(self.board)
+        current_board = self.board
         try:
             with time_limit(int(self.limit)):
                 self.Search(self.board)
         except TimeoutException as e:
-            self.respond("unknown")         
+            self.respond("unknown")
+            self.board = current_board         
         # result = self.run_with_limited_time(self.Search(self.board))
         # if result == False:
         #     # this means that after timeout 
@@ -265,7 +267,7 @@ class GtpConnection():
 
         # sort all possible move (in an decreasing order) according to how likely the move will lead to win
         # allPossibleMove = self.moveOrdering(state, allPossibleMove)
-
+        state.ScanBoard(allPossibleMove)
         drawBest = False # flag to indicate over all possible move the best possible result will be draw result
         for m in allPossibleMove:
             state.play_move_gomoku(m,state.current_player)
@@ -299,9 +301,9 @@ class GtpConnection():
         # self.board.board[31] = 19
         # print(self.board.board[23])
         moves = self.board.get_empty_points()
+        print(moves)
         self.board.ScanBoard(moves)
-        
-
+        print(moves)
 
 
     def timelimit_cmd(self, args):

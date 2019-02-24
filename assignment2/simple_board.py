@@ -508,6 +508,8 @@ class SimpleGoBoard(object):
         if length + count < 5:
             score -= self.evaluate[count]/2
             score -= 3
+        if length + count > 5:
+            score += 1.3**(length + count-5)
         if count != 5:
             if openEnd == 0 and BorderEnd != 2:
                 score -= self.evaluate[count]/2
@@ -528,6 +530,7 @@ class SimpleGoBoard(object):
         # check y=-x
         score += self.check_direction_connect_and_compute_score(point, self.NS-1)
         return score
+
 
     def ScanBoard(self, possibleMoves):
         """
@@ -562,7 +565,6 @@ class SimpleGoBoard(object):
         possibleMovesWithScore.sort(key=lambda x:x[1], reverse=True)
         for index,move in enumerate(possibleMovesWithScore):
             possibleMoves[index] = move[0]
-            if move[1] == 4:
-                self.board[move[0]] = 6
-        print(possibleMovesWithScore)
+            # self.board[move[0]] = int(move[1])
+        
 
