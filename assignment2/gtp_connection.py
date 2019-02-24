@@ -196,7 +196,7 @@ class GtpConnection():
         # this will store the move that will lead to draw
         self.drawMove = [""]
         #self.Search(self.board)
-        current_board = self.board
+        current_board = self.board.copy()
         try:
             with time_limit(int(self.limit)):
                 self.Search(self.board)
@@ -267,7 +267,7 @@ class GtpConnection():
 
         # sort all possible move (in an decreasing order) according to how likely the move will lead to win
         # allPossibleMove = self.moveOrdering(state, allPossibleMove)
-        state.ScanBoard(allPossibleMove)
+        # state.ScanBoard(allPossibleMove)
         drawBest = False # flag to indicate over all possible move the best possible result will be draw result
         for m in allPossibleMove:
             state.play_move_gomoku(m,state.current_player)
@@ -430,7 +430,7 @@ class GtpConnection():
         
         # before go in DFS search record the current board
         # in case it times out, we need to recover the board information
-        current_board = self.board
+        current_board = self.board.copy()
 
         # if not end game yet, call search to find best move to go
         try:
@@ -446,7 +446,7 @@ class GtpConnection():
             # out of timelimit and randomplay
             # search can not complete within the time limit
             # so winner is unknow
-            print("exception")
+            # print("exception")
             # recover the board to current
             self.board = current_board
             #get_move generate a random move from legal moves
@@ -456,6 +456,7 @@ class GtpConnection():
             move_coord = point_to_coord(move, self.board.size)
             move_as_string = format_point(move_coord)
             self.respond(move_as_string)
+            return 
                 
                 
         if self.FinalWinner == board_color: #use solver to find best move#
@@ -474,10 +475,11 @@ class GtpConnection():
             # if it is a draw, then play the drawMove
             # that is the best move possible
             # move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
-            self.board.play_move_gomoku(move, color)
-            move_coord = point_to_coord(move, self.board.size)
-            move_as_string = format_point(move_coord)
-            self.respond(move_as_string)            
+            move = self.drawMove[0]
+            coord = move_to_coord(move, self.board.size)
+            point = coord_to_point(coord[0],coord[1],self.board.size)
+            self.board.play_move_gomoku(point, color)
+            self.respond(move)            
             
                    
         elif self.FinalWinner != board_color:         #final winer is oponent, then randomly play
