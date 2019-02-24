@@ -50,6 +50,7 @@ class GtpConnection():
         self.board = board
         self.limit = 1
         self.commands = {
+            "mo": self.moveOrdering,
             "solve": self.solve_cmd,
             "timelimit": self.timelimit_cmd,
             "protocol_version": self.protocol_version_cmd,
@@ -207,7 +208,7 @@ class GtpConnection():
         #     # output: "unknown" to the interface
         #     self.respond("unknown")
     
-    def Search(self, state):
+    def Search(self, state, whocall="solve_cmd"):
         """
         Input:
             state: current SimpleGoBoard class
@@ -227,19 +228,19 @@ class GtpConnection():
         winners = ["b","w"]
         if result == 0:
             # result is draw
-            self.FinalWinner = "unknown"
-            self.respond("draw %s"%(str(self.drawMove[0])))
-            # print("aaaaa")
+            self.FinalWinner = "draw"
+            if whocall == "solve_cmd":
+                self.respond("draw %s"%(str(self.drawMove[0])))
         elif result == -1:
             # result is lose
             self.FinalWinner = winners[opponent-1]
-            self.respond("%s"%(winners[opponent-1]))
-            # print("bbbbb")
+            if whocall == "solve_cmd":
+                self.respond("%s"%(winners[opponent-1]))
         elif result == 1:
             # result is win
             self.FinalWinner = winners[me-1]
-            self.respond("%s %s"%(winners[me-1], str(self.winningMove[0])))
-            # print("ccccc")
+            if whocall == "solve_cmd":
+                self.respond("%s %s"%(winners[me-1], str(self.winningMove[0])))
 
     def negamaxBoolean(self, state):
         """
@@ -284,15 +285,23 @@ class GtpConnection():
             return 0
         return -1
 
-    def moveOrdering(self, state, allPossibleMove):
+    def moveOrdering(self, args):
         """
         evaluate the board state
         evaluate and assign a score to each possible move 
         Sort the list of all possible moves according to the score
         """
         # evaluate the board state
+        
+        # print(self.board.board[2])
+        # print(self.board.board[16])
+        # self.board.board[23] = 19
+        # self.board.board[31] = 19
+        # print(self.board.board[23])
+        moves = self.board.get_empty_points()
+        self.board.ScanBoard(moves)
+        
 
-        pass
 
 
     def timelimit_cmd(self, args):
@@ -303,7 +312,10 @@ class GtpConnection():
         """
         self.limit = args[0]
         self.respond("")
+<<<<<<< HEAD
+=======
         
+>>>>>>> 2589cf2395304e5101658cbe7ce26a498bbe1c28
 
        
     
@@ -414,50 +426,74 @@ class GtpConnection():
         """
         board_color = args[0].lower()
         color = color_to_int(board_color)
+        # first check if end Game or not
         game_end, winner = self.board.check_game_end_gomoku()
         if game_end:
             return
         
+        # before go in DFS search record the current board
+        # in case it times out, we need to recover the board information
+        current_board = self.board
 
+        # if not end game yet, call search to find best move to go
         try:
             with time_limit(int(self.limit)):
                 #print("start search")
-                self.Search(self.board)
+                self.Search(self.board, whocall="genmove")
                 #print("winning move",self.winningMove[0])
                 #print("draw move",self.drawMove[0])
                 #print("final winner:",self.FinalWinner)
+
                 
         except TimeoutException as e:
-            #out of timelimit and randomplay
+            # out of timelimit and randomplay
+            # search can not complete within the time limit
+            # so winner is unknow
             print("exception")
-            move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
-           
+            # recover the board to current
+            self.board = current_board
+            #get_move generate a random move from legal moves
+            move = self.go_engine.get_move(self.board, color)
+            self.board.play_move_gomoku(move, color)
+            # print the move to interface  
             move_coord = point_to_coord(move, self.board.size)
             move_as_string = format_point(move_coord)
-            self.board.play_move_gomoku(move, color)
             self.respond(move_as_string)
                 
                 
         if self.FinalWinner == board_color: #use solver to find best move#
             # print("has winning move")
+            # the color request to genmove is the winner and winner move is found
             move = self.winningMove[0]
             coord = move_to_coord(move, self.board.size)
-            point = coord_to_point(coord[0],coord[1],self.board.size)      
+            point = coord_to_point(coord[0],coord[1],self.board.size)
+            # play this winning move      
             self.board.play_move_gomoku(point, color)
+            # print this move to interface
+            self.respond(move)
 
-        elif self.FinalWinner == "unknown": #final status is draw,try to find best move #
-            move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
-            self.board.play_move_gomoku(move, color)            
- 
-                   
-        else :         #final winer is oponent, then randomly play
-            # print("lose")
-            move = self.go_engine.get_move(self.board, color)
-        
+
+        elif self.FinalWinner == "draw": #final status is draw,try to find best move #
+            # if it is a draw, then play the drawMove
+            # that is the best move possible
+            # move = self.go_engine.get_move(self.board, color)  #get_move generate a random move from legal moves
+            self.board.play_move_gomoku(move, color)
             move_coord = point_to_coord(move, self.board.size)
-         
+            move_as_string = format_point(move_coord)
+            self.respond(move_as_string)            
+            
+                   
+        elif self.FinalWinner != board_color:         #final winer is oponent, then randomly play
+            # print("lose")
+            # the color request to genmove is lose
+            move = self.go_engine.get_move(self.board, color)
+            move_coord = point_to_coord(move, self.board.size)
+            move_as_string = format_point(move_coord)
+            self.respond(move_as_string)
 
-   
+        else:
+            # this will be execute only if there is bug
+            print("WARNING: BUG in genmove")
 
 
 
