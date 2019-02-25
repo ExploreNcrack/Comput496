@@ -85,7 +85,7 @@ class SimpleGoBoard(object):
         Creates a Go board of given size
         """
         assert 2 <= size <= MAXSIZE
-        self.evaluateOnAttack = {1:1, 2:500, 3:1300, 4:2000, 5:100000}
+        self.evaluateOnAttack = {1:1, 2:500, 3:1300, 4:2000, 5:10000000}
         self.evaluateOnDefend = {0:0, 1:200, 2:400, 3:2100, 4:100000}
         self.reset(size)
 
@@ -468,10 +468,12 @@ class SimpleGoBoard(object):
         openEnd = 2
         BorderEnd = 0
         length = 0
+        connectSet = [point]
         while True:
             p = p + d
             if self.board[p] == color:
                 count = count + 1
+                connectSet.append(p)
             else:
                 if self.board[p] == EMPTY:
                     tmpP = p
@@ -490,6 +492,7 @@ class SimpleGoBoard(object):
             p = p + d
             if self.board[p] == color:
                 count = count + 1
+                connectSet.append(p)
             else:
                 if self.board[p] == EMPTY:
                     tmpP = p
@@ -502,6 +505,10 @@ class SimpleGoBoard(object):
                 if self.board[p] == BORDER:
                     BorderEnd += 1
                 break
+        if count == 4 and openEnd == 2:
+            cs = set(connectSet)
+            if cs not in self.weConnectFree4:
+                self.weConnectFree4.append(cs)
         # do evaluation 
         if count > 5:
             score = self.evaluateOnAttack[5]
@@ -553,14 +560,23 @@ class SimpleGoBoard(object):
 
     def evaluate_move_on_attack(self, point):
         score = 0
+        self.weConnectFree4 = []
         # check horizontal
         score += self.check_direction_connect_and_compute_score_attck(point, 1)
+        if len(self.weConnectFree4) >= 1:
+            return 100000000000
         # check vertical
         score += self.check_direction_connect_and_compute_score_attck(point, self.NS)
+        if len(self.weConnectFree4) >= 1:
+            return 100000000000
         # check y=x
         score += self.check_direction_connect_and_compute_score_attck(point, self.NS+1)
+        if len(self.weConnectFree4) >= 1:
+            return 100000000000
         # check y=-x
         score += self.check_direction_connect_and_compute_score_attck(point, self.NS-1)
+        if len(self.weConnectFree4) >= 1:
+            return 100000000000
         return score
 
     def evaluate_move_on_defend(self, point):
@@ -574,6 +590,71 @@ class SimpleGoBoard(object):
         # check y=-x
         score += self.check_direction_block_connect_and_compute_score_defend(point, self.NS-1)
         return score 
+
+    def direction_check_opponent_point(self, point, shift, color):
+        count = 1
+        d = shift
+        p = point
+        connectSet = [point]
+        openEnd = 2
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+                connectSet.append(p)
+            else:
+                if self.board[p] != EMPTY:
+                    openEnd -= 1
+                break
+        d = -d
+        p = point
+        while True:
+            p = p + d
+            if self.board[p] == color:
+                count = count + 1
+                connectSet.append(p)
+            else:
+                if self.board[p] != EMPTY:
+                    openEnd -= 1
+                break
+        if openEnd == 2 and len(connectSet) == 3:
+            cs = set(connectSet)
+            if cs not in self.opponentConnectFree3:
+                self.opponentConnectFree3.append(cs)
+        elif openEnd == 2 and len(connectSet) == 4:
+            cs = set(connectSet)
+            if cs not in self.opponentConnectFree4:
+                self.opponentConnectFree4.append(cs)
+
+
+    def check_if_opponent_has_immediate_win(self):
+        self.opponentConnectFree3 = []
+        self.opponentConnectFree4 = []
+        opponentPoints = self.get_oppoent_points()
+        if len(opponentPoints) < 4:
+            return False
+        color = GoBoardUtil.opponent(self.current_player)
+        for point in opponentPoints:
+            # check horizontal 
+            self.direction_check_opponent_point(point, 1, color)
+            if len(self.opponentConnectFree4) >= 1 or len(self.opponentConnectFree3) >= 2:
+                return True
+            # check vertical
+            self.direction_check_opponent_point(point, self.NS, color)
+            if len(self.opponentConnectFree4) >= 1 or len(self.opponentConnectFree3) >= 2:
+                return True
+            # check y=x
+            self.direction_check_opponent_point(point, self.NS+1, color)
+            if len(self.opponentConnectFree4) >= 1 or len(self.opponentConnectFree3) >= 2:
+                return True
+            # check y=-x
+            self.direction_check_opponent_point(point, self.NS-1, color)
+            if len(self.opponentConnectFree4) >= 1 or len(self.opponentConnectFree3) >= 2:
+                return True
+        # print(self.opponentConnectFree3)
+        # print(self.opponentConnectFree4)
+        
+        return False
 
     def ScanBoard(self, possibleMoves):
         """
@@ -596,19 +677,24 @@ class SimpleGoBoard(object):
                 # if we have 5-connect after the move and about to win 
                 possibleMoves[index] = possibleMoves[0]
                 possibleMoves[0] = move[0]
-                return
+                return possibleMoves
         # check if opponent win immediately
+        if self.check_if_opponent_has_immediate_win():
+            # prune this search because this will lead to lose
+            # print("check")
+            possibleMoves = []
+            return possibleMoves
 
         # defense evaluation
         # for index,move in enumerate(possibleMovesWithScore):
         # #     # move[0]: move position
         #     score = self.evaluate_move_on_defend(move[0])
         #     possibleMovesWithScore[index][1] += score
-            
+        
         # sort the possible move list according to the score
         possibleMovesWithScore.sort(key=lambda x:x[1], reverse=True)
         for index,move in enumerate(possibleMovesWithScore):
             possibleMoves[index] = move[0]
             # self.board[move[0]] = int(move[1])
-        
+        return possibleMoves
 

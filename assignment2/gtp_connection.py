@@ -267,9 +267,11 @@ class GtpConnection():
 
         # sort all possible move (in an decreasing order) according to how likely the move will lead to win
         # allPossibleMove = self.moveOrdering(state, allPossibleMove)
-        state.ScanBoard(allPossibleMove)
+        all_possible_move = state.ScanBoard(allPossibleMove)
+        if len(all_possible_move) == 0:
+            return -1
         drawBest = False # flag to indicate over all possible move the best possible result will be draw result
-        for m in allPossibleMove:
+        for m in all_possible_move:
             state.play_move_gomoku(m,state.current_player)
             success = -self.negamaxBoolean(state)
             state.undoMove()
@@ -304,7 +306,7 @@ class GtpConnection():
         print(moves)
         self.board.ScanBoard(moves)
         print(moves)
-
+        self.respond("")
 
     def timelimit_cmd(self, args):
         """
