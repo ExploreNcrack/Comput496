@@ -49,7 +49,8 @@ class GtpConnection():
             "gogui-rules_side_to_move": self.gogui_rules_side_to_move_cmd,
             "gogui-rules_board": self.gogui_rules_board_cmd,
             "gogui-rules_final_result": self.gogui_rules_final_result_cmd,
-            "gogui-analyze_commands": self.gogui_analyze_cmd
+            "gogui-analyze_commands": self.gogui_analyze_cmd,
+            "policy" : self.policy_cmd
         }
 
         # used for argument checking
@@ -275,48 +276,67 @@ class GtpConnection():
 
 
     #simulate from a given state(given board) with current player to move
-    def simulate(self, state, move):   #state = a given board state
+    def simulate(self, move):   #state = a given board state
         stats = [0] * 3
-        current_board = self.board
-        self.board = state
+        current_board = self.board.copy()
         color = "b" if self.board.current_player == BLACK else "w"
         color = color_to_int(board_color)        
-        self.board.play_move_gomoku(move, color)
+        current_board.play_move_gomoku(move, color)
         #state.play(move)
-        #moveNr = self.board.moveNumber()
         for _ in range(self.numSimulations):
-            winner, _ = sef.simulate(self.board,color)
+            winner, _ = sef.simulate(current_board,color)
             stats[winner] += 1
             #self.board.resetToMoveNumber(moveNr)
         #assert sum(stats) == self.numSimulations
         #assert moveNr == self.board.moveNumber()
-        self.board.undoMove()
+        #current_board.undoMove()
         eval = (stats[BLACK] + 0.5 * stats[EMPTY]) / self.numSimulations
         if self.board.current_player == WHITE:   #toplay==WHITE
             eval = 1 - eval
-        self.board = current_board
+        #self.board = current_board
         return eval
     
     
     
     def simulate(self,state,color):
-        current_board = self.board.copy()
-        self.board = state
-        game_end, winner = self.board.check_game_end_gomoku()
+        #current_board = self.board.copy()
+        #self.board = state
+        game_end, winner = state.check_game_end_gomoku()
         if game_end:
             return
-        allMoves = GoBoardUtil.generate_legal_moves_gomoku(self.board, color) 
+        allMoves = GoBoardUtil.generate_legal_moves_gomoku(state, color) 
         random.shuffle(allMoves) 
         i=0
         while not game_end:
-            self.board.play_move_gomoku(allMoves[i], color)
+            state.play_move_gomoku(allMoves[i], color)
             i += 1
             game_end, winner = self.board.check_game_end_gomoku()
-        self.board = current_board
         return winner, i
+    
+    
+    """Win: if you can win directly, in one move, then only consider one of the winning moves.
+BlockWin: if the opponent can win directly, then only play a move that blocks the win. For example, OO.OO can be blocked by a move OOXOO.
+Even if you cannot prevent the win, as in the case .OOOO., or when there is more than one open four on the board, you should generate a blocking move.
+
+OpenFour: if you have a move that creates an open four position of type .XXXX., then play it.
+Examples of this scenario are: .X.XX. and .XXX..
+
+BlockOpenFour: play a move that prevents the opponent from getting an open four. For example, the situation ..OOO.. can be blocked by moves .XOOO.. or ..OOOX.
+Random: if none of the previous cases applies, then generate a move uniformly at random, as in part 1."""
+
+    
+    def goThroughRules(self,color,state):
+        pass
+        
+        
+        
+    
 
     def gogui_rules_game_id_cmd(self, args):
         self.respond("Gomoku")
+        
+    def policy_cmd(self,args):
+        pass
     
     def gogui_rules_board_size_cmd(self, args):
         self.respond(str(self.board.size))
