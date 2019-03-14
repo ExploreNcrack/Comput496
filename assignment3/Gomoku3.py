@@ -297,21 +297,29 @@ class GtpConnection():
         return eval
     
     
-    
+    """default to do rule-based simulation, if no moves to play, then do the random simulation"""
     def simulate(self,state,color):
         #current_board = self.board.copy()
         #self.board = state
         game_end, winner = state.check_game_end_gomoku()
         if game_end:
             return
-        allMoves = GoBoardUtil.generate_legal_moves_gomoku(state, color) 
-        random.shuffle(allMoves) 
-        i=0
         while not game_end:
-            state.play_move_gomoku(allMoves[i], color)
-            i += 1
-            game_end, winner = self.board.check_game_end_gomoku()
-        return winner, i
+            allMoves = GoBoardUtil.generate_legal_moves_gomoku(state, color) 
+            #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
+            all_possible_rule_based_move = state.ScanBoard(allMoves)
+            if len(all_possible_rule_based_move) == 0:   #random play
+                random.shuffle(allMoves)            
+                state.play_move_gomoku(allMoves[0], color)
+        
+            else:  
+                # rule-based play   
+                state.play_move_gomoku(all_possible_rule_based_move[0], color)
+        game_end, winner = self.board.check_game_end_gomoku()
+        return winner, i        
+                
+            
+        
     
     
     """Win: if you can win directly, in one move, then only consider one of the winning moves.
