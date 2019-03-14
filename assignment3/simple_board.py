@@ -694,7 +694,8 @@ class SimpleGoBoard(object):
             # print("check")
             possibleMoves = self.opponentWinMove
             all_possible_rule_based_move += possibleMoves
-
+        """2. block win"""
+        
         # defense evaluation
         # for index,move in enumerate(possibleMovesWithScore):
         # #     # move[0]: move position

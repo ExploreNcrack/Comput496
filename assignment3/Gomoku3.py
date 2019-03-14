@@ -287,8 +287,6 @@ class GtpConnection():
             winner, _ = sef.simulate(current_board,color)
             stats[winner] += 1
             #self.board.resetToMoveNumber(moveNr)
-        #assert sum(stats) == self.numSimulations
-        #assert moveNr == self.board.moveNumber()
         #current_board.undoMove()
         eval = (stats[BLACK] + 0.5 * stats[EMPTY]) / self.numSimulations
         if self.board.current_player == WHITE:   #toplay==WHITE
@@ -332,9 +330,7 @@ Examples of this scenario are: .X.XX. and .XXX..
 BlockOpenFour: play a move that prevents the opponent from getting an open four. For example, the situation ..OOO.. can be blocked by moves .XOOO.. or ..OOOX.
 Random: if none of the previous cases applies, then generate a move uniformly at random, as in part 1."""
 
-    
-    def goThroughRules(self,color,state):
-        pass
+
         
         
         
