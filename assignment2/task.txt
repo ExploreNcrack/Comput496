@@ -1,4 +1,0 @@
-Complete following GTP command:
--timelimit
--solve
--genmove
