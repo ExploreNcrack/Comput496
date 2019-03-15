@@ -268,10 +268,10 @@ class GtpConnection():
         bestIndex = score.index(max(score))
         best = moves[bestIndex]
         self.board = current_board
-        move_coord = point_to_coord(move, self.board.size)   #????
+        move_coord = point_to_coord(best, self.board.size)   #????
         move_as_string = format_point(move_coord)
         #self.respond(move_as_string)
-        self.respond(best)
+        self.respond(move_as_string)
 
 
     #simulate from a given state(given board) with current player to move
