@@ -12,6 +12,7 @@ from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, PASS, \
                        MAXSIZE, coord_to_point
 import numpy as np
 import re
+import random 
 
 class GtpConnection():
 
@@ -246,7 +247,7 @@ class GtpConnection():
         except Exception as e:
             self.respond('{}'.format(str(e)))
 
-    def genmove(self, args):
+    def genmove_cmd(self, args):
         current_board = self.board.copy()
         board_color = args[0].lower()
         color = color_to_int(board_color)        
@@ -257,8 +258,8 @@ class GtpConnection():
             else:
                 self.respond("resign")
             return
-        
-        moves = self.board.legalMoves()
+
+        moves = GoBoardUtil.generate_legal_moves(self.board, color)        
         numMoves = len(moves)
         score = [0] * numMoves
         for i in range(numMoves):
@@ -278,12 +279,12 @@ class GtpConnection():
     def simulate(self, move):   #state = a given board state
         stats = [0] * 3
         current_board = self.board.copy()
-        color = "b" if self.board.current_player == BLACK else "w"
-        color = color_to_int(board_color)        
-        current_board.play_move_gomoku(move, color)
+       # color = "b" if self.board.current_player == BLACK else "w"
+        #color = color_to_int(board_color)        
+        current_board.play_move_gomoku(move, self.board.current_player)
         #state.play(move)
         for _ in range(self.numSimulations):
-            winner, _ = sef.simulate(current_board,color)
+            winner, _ = self.simulate(current_board,self.board.current_player)
             stats[winner] += 1
             #self.board.resetToMoveNumber(moveNr)
         #current_board.undoMove()
@@ -302,16 +303,16 @@ class GtpConnection():
         if game_end:
             return
         while not game_end:
-            allMoves = GoBoardUtil.generate_legal_moves_gomoku(state, color) 
+            allMoves = GoBoardUtil.generate_legal_moves_gomoku(state) 
             #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
             all_possible_rule_based_move = state.ScanBoard(allMoves)
             if len(all_possible_rule_based_move) == 0:   #random play
                 random.shuffle(allMoves)            
-                state.play_move_gomoku(allMoves[0], color)
+                state.play_move_gomoku(allMoves[0], self.board.current_player)
         
             else:  
                 # rule-based play   
-                state.play_move_gomoku(all_possible_rule_based_move[0], color)
+                state.play_move_gomoku(all_possible_rule_based_move[0], self.board.current_player)
         game_end, winner = self.board.check_game_end_gomoku()
         return winner, i        
                 
