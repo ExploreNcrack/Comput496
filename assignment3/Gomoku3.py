@@ -272,7 +272,6 @@ class GtpConnection():
         move_as_string = format_point(move_coord)
         #self.respond(move_as_string)
         self.respond(best)
-        return         
 
 
     #simulate from a given state(given board) with current player to move
