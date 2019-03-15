@@ -509,6 +509,10 @@ class SimpleGoBoard(object):
             cs = set(connectSet)
             if cs not in self.weConnectFree4:
                 self.weConnectFree4.append(cs)
+            self.movesCreateOpenFour.append(point)
+        if count == 5:
+            self.winningMove.append(point)
+            
         # do evaluation 
         if count > 5:
             score = self.evaluateOnAttack[5]
@@ -561,6 +565,8 @@ class SimpleGoBoard(object):
     def evaluate_move_on_attack(self, point):
         score = 0
         self.weConnectFree4 = []
+        self.movesCreateOpenFour = []  
+        self.winningMove = []
         # check horizontal
         score += self.check_direction_connect_and_compute_score_attck(point, 1)
         if len(self.weConnectFree4) >= 1:
@@ -603,12 +609,19 @@ class SimpleGoBoard(object):
             if self.board[p] == color:
                 count = count + 1
                 connectSet.append(p)
-                if count == 4:
-                    self.opponentWinMove .append(point)
+                
             else:
                 if self.board[p] != EMPTY:
                     openEnd -= 1
                 break
+            if count == 4 and (p+d)== Empty:  
+                #p+d is the move that the opponent can immediately win
+                self.opponentWinMove.append(p+d)
+            if count == 3 and  openEND == 2 and (p+2*d)==Empty :  
+                #" .OOO.."  p+d is the move that can prevents the opponent from getting an open four
+                self.blockOpponentOpenFour.append(p+d)
+                
+            
         d = -d
         p = point
         while True:
@@ -616,12 +629,19 @@ class SimpleGoBoard(object):
             if self.board[p] == color:
                 count = count + 1
                 connectSet.append(p)
-                if count == 4:
-                    self.opponentWinMove .append(p)                
+             
             else:
                 if self.board[p] != EMPTY:
                     openEnd -= 1
                 break
+            
+            if count == 4 and (p+d)== Empty:
+                #p+d is the move that the opponent can immediately win                
+                self.opponentWinMove.append(p+d)  
+            if count == 3 and  openEND == 2 and (p+2*d)==Empty : 
+                #" ..OOO." p+d is the move that can prevents the opponent from getting an open four
+                self.blockOpponentOpenFour.append(p+d)                
+                
         if openEnd == 2 and len(connectSet) == 3:
             cs = set(connectSet)
             if cs not in self.opponentConnectFree3:
@@ -636,6 +656,7 @@ class SimpleGoBoard(object):
     def check_if_opponent_has_immediate_win(self):
         self.opponentConnectFree3 = []
         self.opponentConnectFree4 = []
+        self.blockOpponentOpenFour = []
         opponentPoints = self.get_oppoent_points()
         if len(opponentPoints) < 4:
             return False
@@ -673,39 +694,25 @@ class SimpleGoBoard(object):
         
         possibleMovesWithScore = []
         all_possible_rule_based_move = []
+        """attack-moves for current player:   1.win   """
         for m in possibleMoves:
-            possibleMovesWithScore.append([m,0])
-        """1.win"""
-        # attack evaluation
-        for index,move in enumerate(possibleMovesWithScore):
-            # move[0]: move position  
-            score = self.evaluate_move_on_attack(move[0])
-            possibleMovesWithScore[index][1] += score
-            if score >= 100000:
-                # check first
-                # if we have 5-connect after the move and about to win 
-                possibleMoves[index] = possibleMoves[0]
-                possibleMoves[0] = move[0]
-                all_possible_rule_based_move += possibleMoves
-        """2. block win"""
+            score = self.evaluate_move_on_attack(m)
+        all_possible_rule_based_move += self.winningMove
+        
+        
+        """defend-moves for current player: 2. block win"""
         # check if opponent win immediately
-        if len(self.opponentWinMove) > 0:
-            # prune this search because this will lead to lose
-            # print("check")
+        if self.check_if_opponent_has_immediate_win():
+            # self.opponentWinMove is a list contains the move that blocks ".OOOO." Even if you cannot prevent the win
             possibleMoves = self.opponentWinMove
+            #need to find move to block " OO.OO" 
             all_possible_rule_based_move += possibleMoves
-        """2. block win"""
+        """3. openFour"""
+        all_possible_rule_based_move += self.movesCreateOpenFour
+        """4. block openFour"""
+        all_possible_rule_based_move += self.blockOpponentOpenFour
         
-        # defense evaluation
-        # for index,move in enumerate(possibleMovesWithScore):
-        # #     # move[0]: move position
-        #     score = self.evaluate_move_on_defend(move[0])
-        #     possibleMovesWithScore[index][1] += score
         
-        # sort the possible move list according to the score
-        possibleMovesWithScore.sort(key=lambda x:x[1], reverse=True)
-        for index,move in enumerate(possibleMovesWithScore):
-            possibleMoves[index] = move[0]
-            # self.board[move[0]] = int(move[1])
+ 
         return all_possible_rule_based_move
 
