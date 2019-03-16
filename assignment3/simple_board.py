@@ -440,6 +440,7 @@ class SimpleGoBoard(object):
         if self._point_direction_check_connect_gomoko(point, self.NS - 1):
             return True
         
+        
         return False
     
     def check_game_end_gomoku(self):
@@ -653,7 +654,7 @@ class SimpleGoBoard(object):
                 if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
                     # " OOO.OO"
                     self.movesCreateOpenFour.append(p+d)            
-                if count == 3 and  openEND == 2 and self.board[p+2*d]==EMPTY : 
+                if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY : 
                     #" ..OOO." p+d is the move that can prevents the opponent from getting an open four
                     self.blockOpponentOpenFour.append(p+d)     
                 if count ==2 and openEnd == 2 and self.board[p+2*d] == color and self.board[p+3*d] == EMPTY:
@@ -700,6 +701,14 @@ class SimpleGoBoard(object):
         # print(self.opponentConnectFree4)
         
         return False
+    
+    
+    def uniq(self,input):
+        output = []
+        for x in input:
+            if x not in output:
+                output.append(x)
+        return output    
 
     def ScanBoard(self, possibleMoves):
         """
@@ -730,7 +739,7 @@ class SimpleGoBoard(object):
         """4. block openFour"""
         all_possible_rule_based_move += self.blockOpponentOpenFour
         
-        
- 
+                
+        all_possible_rule_based_move = self.uniq(all_possible_rule_based_move)
         return all_possible_rule_based_move
 
