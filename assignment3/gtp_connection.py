@@ -269,9 +269,8 @@ class GtpConnection():
         bestIndex = score.index(max(score))
         best = moves[bestIndex]
         self.board = current_board
-        move_coord = point_to_coord(best, self.board.size)   #????
+        move_coord = point_to_coord(best, self.board.size)  
         move_as_string = format_point(move_coord)
-        #self.respond(move_as_string)
         self.respond(move_as_string)
 
 
@@ -279,9 +278,7 @@ class GtpConnection():
     def simulate(self, move):   #state = a given board state
         stats = [0] * 3
         self.numSimulations = 1;
-        current_board = self.board.copy()
-       # color = "b" if self.board.current_player == BLACK else "w"
-        #color = color_to_int(board_color)        
+        current_board = self.board.copy()      
         current_board.play_move_gomoku(move, self.board.current_player)
         #state.play(move)
         i=0
@@ -301,8 +298,6 @@ class GtpConnection():
     
     """default to do rule-based simulation, if no moves to play, then do the random simulation"""
     def simulate(self,state,color):
-        #current_board = self.board.copy()
-        #self.board = state
         game_end, winner = state.check_game_end_gomoku()
         if game_end:
             return
