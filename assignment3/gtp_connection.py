@@ -260,6 +260,10 @@ class GtpConnection():
             else:
                 self.respond("resign")
             return
+         # check draw
+        if len(self.board.get_empty_points()) == 0:
+            self.respond("pass")
+            return
 
         moves = GoBoardUtil.generate_legal_moves(self.board, color)        
         numMoves = len(moves)
@@ -283,7 +287,7 @@ class GtpConnection():
         #state.play(move)
         i=0
         for _ in range(self.numSimulations):
-            print("simulation number:",i)
+            # print("simulation number:",i)
             # reset the board for every simulation
             current_board = self.board.copy()      
             current_board.play_move_gomoku(move, current_board.current_player)
@@ -303,6 +307,7 @@ class GtpConnection():
     
     """default to do rule-based simulation, if no moves to play, then do the random simulation"""
     def simulate(self,state,color):
+        print("---------")
         game_end, winner = state.check_game_end_gomoku()
         if game_end:
             return winner
@@ -313,40 +318,40 @@ class GtpConnection():
             if len(allMoves) == 0:
                 game_end = True
                 winner = EMPTY
-                print("winner:",winner)
+                # print("winner:",winner)
                 return winner
             if self.policyType == "random":
                 random.shuffle(allMoves)     
                # print("empty points:",state.get_empty_points())
                 state.play_move_gomoku(allMoves[0], state.current_player)
 
-                print("play random move",allMoves[0])
+                # print("play random move",allMoves[0])
             elif self.policyType == "rule_based":
                 
                 #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
                 all_possible_rule_based_move ,self.Dict= state.ScanBoard(allMoves)
-                print("length of allMoves: ",len(allMoves))
-                print("all_possible_rule_based_move:",all_possible_rule_based_move)
+                # print("length of allMoves: ",len(allMoves))
+                # print("all_possible_rule_based_move:",all_possible_rule_based_move)
                 if len(all_possible_rule_based_move) == 0:   #random play
                     random.shuffle(allMoves)    
                    # print("empty points:",state.get_empty_points())
                     state.play_move_gomoku(allMoves[0], state.current_player)
     
-                    print("play random move",allMoves[0])
+                    # print("play random move",allMoves[0])
     
             
                 else:  
                     # rule-based play   
                     #print("empty points:",state.get_empty_points())
                     a = state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
-                    print("play_move_gomoku return:",a)
+                    # print("play_move_gomoku return:",a)
                     #state.play_move_gomoku(allMoves[0], state.current_player)
     
-                    print("play rule based move",all_possible_rule_based_move[0])
+                    # print("play rule based move",all_possible_rule_based_move[0])
                     
             else:
-                print("policy type is not defined")
-                    
+                # print("policy type is not defined")
+                pass
                 
             game_end, winner = state.check_game_end_gomoku()
             #self.respond('\n' + self.board2d())
@@ -380,6 +385,7 @@ Random: if none of the previous cases applies, then generate a move uniformly at
         
     def policy_cmd(self,args):
         self.policyType = args[0]
+        self.respond()
         
     def policy_moves(self,args):
         

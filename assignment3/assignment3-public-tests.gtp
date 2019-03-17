@@ -175,6 +175,7 @@ play B B3
 play W C4
 play B B4
 
+showboard
 70 policy_moves
 #?[BlockWin B5]
 
