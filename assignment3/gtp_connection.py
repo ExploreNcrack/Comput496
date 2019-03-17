@@ -277,7 +277,7 @@ class GtpConnection():
     #simulate from a given state(given board) with current player to move
     def SIMULATE(self, move):   #state = a given board state
         stats = [0] * 3
-        self.numSimulations = 1;
+        self.numSimulations = 10;
         #state.play(move)
         i=0
         for _ in range(self.numSimulations):
@@ -303,7 +303,7 @@ class GtpConnection():
     def simulate(self,state,color):
         game_end, winner = state.check_game_end_gomoku()
         if game_end:
-            return
+            return winner
         j = 0
         while not game_end:
             j+=1
@@ -338,9 +338,7 @@ class GtpConnection():
             #self.respond('\n' + self.board2d())
 
             #the while loop won't terminate, use j to test 
-            if j==20:
-                break
-        
+            
         return winner        
                 
             
