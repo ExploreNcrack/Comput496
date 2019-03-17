@@ -264,7 +264,7 @@ class GtpConnection():
         score = [0] * numMoves
         for i in range(numMoves):
             move = moves[i]
-            score[i] = self.simulate(self.board, move)
+            score[i] = self.SIMULATE( move)
         #print(score)
         bestIndex = score.index(max(score))
         best = moves[bestIndex]
@@ -275,16 +275,17 @@ class GtpConnection():
 
 
     #simulate from a given state(given board) with current player to move
-    def simulate(self, move):   #state = a given board state
+    def SIMULATE(self, move):   #state = a given board state
         stats = [0] * 3
         self.numSimulations = 1;
-        current_board = self.board.copy()      
-        current_board.play_move_gomoku(move, self.board.current_player)
         #state.play(move)
         i=0
         for _ in range(self.numSimulations):
             print("simulation number:",i)
-            winner, _ = self.simulate(current_board,self.board.current_player)
+            # reset the board for every simulation
+            current_board = self.board.copy()      
+            current_board.play_move_gomoku(move, current_board.current_player)
+            winner = self.simulate(current_board, current_board.current_player)
             stats[winner] += 1
             i+=1
             #self.board.resetToMoveNumber(moveNr)
@@ -305,26 +306,29 @@ class GtpConnection():
         while not game_end:
             j+=1
             allMoves = GoBoardUtil.generate_legal_moves_gomoku(state) 
+            if len(allMoves) == 0:
+                game_end = True
+                winner = EMPTY
+                return winner
             #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
             all_possible_rule_based_move = state.ScanBoard(allMoves)
             print("length of allMoves: ",len(allMoves))
             print("length of all_possible_rule_based_move:",all_possible_rule_based_move)
             if len(all_possible_rule_based_move) == 0:   #random play
                 random.shuffle(allMoves)            
-                state.play_move_gomoku(allMoves[0], self.board.current_player)
-                print("play random move")
+                state.play_move_gomoku(allMoves[0], state.current_player)
+                print("play random move",allMoves[0])
         
             else:  
                 # rule-based play   
-                state.play_move_gomoku(all_possible_rule_based_move[0], self.board.current_player)
-                print("play rule based move")
-            game_end, winner = self.board.check_game_end_gomoku()
-            self.respond('\n' + self.board2d())
+                state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
+                print("play rule based move",all_possible_rule_based_move[0])
+            game_end, winner = state.check_game_end_gomoku()
             #the while loop won't terminate, use j to test 
             #if j==20:
                 #break
         
-        return winner, i        
+        return winner        
                 
             
         
