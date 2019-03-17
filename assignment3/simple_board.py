@@ -370,7 +370,6 @@ class SimpleGoBoard(object):
         self.board[point] = color
         self.moves.append(point)
         print("moves:",self.moves)
-        print("aaaaaaaaaaaaaaaaaaaaaaa")
         self.current_player = GoBoardUtil.opponent(color)
         return True
 
@@ -568,7 +567,8 @@ class SimpleGoBoard(object):
     def evaluate_move_on_attack(self, point):
         score = 0
         self.weConnectFree4 = []
-        self.movesCreateOpenFour = []  
+        self.winningMove = []        
+        
         # check horizontal
         score += self.check_direction_connect_and_compute_score_attck(point, 1)
         if len(self.weConnectFree4) >= 1:
@@ -721,12 +721,13 @@ class SimpleGoBoard(object):
         """
         
         possibleMovesWithScore = []
-        self.winningMove = []        
         all_possible_rule_based_move = []
+        self.movesCreateOpenFour =[]
         """attack-moves for current player:   1.win   """
         for m in possibleMoves:
             score = self.evaluate_move_on_attack(m)
-        all_possible_rule_based_move += self.winningMove
+            all_possible_rule_based_move += self.winningMove
+            self.movesCreateOpenFour += self.movesCreateOpenFour
         
         
         """defend-moves for current player: 2. block win"""

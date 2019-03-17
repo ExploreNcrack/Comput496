@@ -318,20 +318,20 @@ class GtpConnection():
             print("length of allMoves: ",len(allMoves))
             print("all_possible_rule_based_move:",all_possible_rule_based_move)
             if len(all_possible_rule_based_move) == 0:   #random play
-                random.shuffle(allMoves)            
+                random.shuffle(allMoves)     
+                print("empty points:",state.get_empty_points)
                 state.play_move_gomoku(allMoves[0], state.current_player)
 
                 print("play random move",allMoves[0])
-                print("current player:",state.current_player)
 
         
             else:  
                 # rule-based play   
+                print("empty points:",state.get_empty_points)
                 a = state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
                 print("play_move_gomoku return:",a)
                 #state.play_move_gomoku(allMoves[0], state.current_player)
 
-                print("current player:",state.current_player)
                 print("play rule based move",all_possible_rule_based_move[0])
                 
             game_end, winner = state.check_game_end_gomoku()
