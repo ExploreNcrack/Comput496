@@ -51,7 +51,9 @@ class GtpConnection():
             "gogui-rules_board": self.gogui_rules_board_cmd,
             "gogui-rules_final_result": self.gogui_rules_final_result_cmd,
             "gogui-analyze_commands": self.gogui_analyze_cmd,
-            "policy" : self.policy_cmd
+            "policy" : self.policy_cmd,
+            "policy_moves":self.policy_moves
+            
         }
 
         # used for argument checking
@@ -313,26 +315,38 @@ class GtpConnection():
                 winner = EMPTY
                 print("winner:",winner)
                 return winner
-            #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
-            all_possible_rule_based_move = state.ScanBoard(allMoves)
-            print("length of allMoves: ",len(allMoves))
-            print("all_possible_rule_based_move:",all_possible_rule_based_move)
-            if len(all_possible_rule_based_move) == 0:   #random play
+            if self.policyType == "random":
                 random.shuffle(allMoves)     
                # print("empty points:",state.get_empty_points())
                 state.play_move_gomoku(allMoves[0], state.current_player)
 
                 print("play random move",allMoves[0])
-
-        
-            else:  
-                # rule-based play   
-                #print("empty points:",state.get_empty_points())
-                a = state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
-                print("play_move_gomoku return:",a)
-                #state.play_move_gomoku(allMoves[0], state.current_player)
-
-                print("play rule based move",all_possible_rule_based_move[0])
+            elif self.policyType == "rule_based":
+                
+                #the all_possible_rule_based_move list contains moves that are ordered from most urgent (higher up in the list) to least urgent        
+                all_possible_rule_based_move ,self.Dict= state.ScanBoard(allMoves)
+                print("length of allMoves: ",len(allMoves))
+                print("all_possible_rule_based_move:",all_possible_rule_based_move)
+                if len(all_possible_rule_based_move) == 0:   #random play
+                    random.shuffle(allMoves)    
+                   # print("empty points:",state.get_empty_points())
+                    state.play_move_gomoku(allMoves[0], state.current_player)
+    
+                    print("play random move",allMoves[0])
+    
+            
+                else:  
+                    # rule-based play   
+                    #print("empty points:",state.get_empty_points())
+                    a = state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
+                    print("play_move_gomoku return:",a)
+                    #state.play_move_gomoku(allMoves[0], state.current_player)
+    
+                    print("play rule based move",all_possible_rule_based_move[0])
+                    
+            else:
+                print("policy type is not defined")
+                    
                 
             game_end, winner = state.check_game_end_gomoku()
             #self.respond('\n' + self.board2d())
@@ -365,7 +379,22 @@ Random: if none of the previous cases applies, then generate a move uniformly at
         self.respond("Gomoku")
         
     def policy_cmd(self,args):
-        pass
+        self.policyType = args[0]
+        
+    def policy_moves(self,args):
+        
+        current_board = self.board.copy()
+        allMoves = GoBoardUtil.generate_legal_moves_gomoku(current_board) 
+        
+        moves,self.Dict = current_board.ScanBoard(allMoves)
+        key = list(self.Dict.keys())[0]
+        print("keys:",key)
+        moveList = self.Dict.get(key)
+        moveList = str(moveList)
+        respondMessage = key + ' '+moveList
+        self.respond(respondMessage)
+        
+        
     
     def gogui_rules_board_size_cmd(self, args):
         self.respond(str(self.board.size))

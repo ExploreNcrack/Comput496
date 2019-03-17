@@ -681,11 +681,16 @@ class SimpleGoBoard(object):
         possibleMovesWithScore = []
         all_possible_rule_based_move = []
         self.movesCreateOpenFour =[]
+        self.winningMoveList = []
+        self.opponentWinMove = []
+        self.blockOpponentOpenFourList = []
+        self.Dict = {"Win":[],"BlockWin":[],"OpenFour":[],"BlockOpenFour":[],"Random":[]}
         """attack-moves for current player:   1.win   """
         for m in possibleMoves:
             score = self.evaluate_move_on_attack(m)
-            all_possible_rule_based_move += self.winningMove
+            self.winningMoveList += self.winningMove
             self.movesCreateOpenFour += self.movesCreateOpenFour
+        all_possible_rule_based_move += self.winningMove
         
         """defend-moves for current player: 2. block win"""
         # check if opponent win immediately
@@ -694,14 +699,27 @@ class SimpleGoBoard(object):
             #possibleMoves = self.opponentWinMove
             #need to find move to block " OO.OO" 
             all_possible_rule_based_move += self.opponentWinMove
-            """4. block openFour"""
-            all_possible_rule_based_move += self.blockOpponentOpenFour
+            """ block openFour"""
+            blockOpponentOpenFourList += self.blockOpponentOpenFour
 
         """3. openFour"""
         all_possible_rule_based_move += self.movesCreateOpenFour
         
-        # self.all_pattern_move["OurWinningMove"] = self.
+        """4. block openFour"""
+        
+        all_possible_rule_based_move += self.blockOpponentOpenFourList
         
         all_possible_rule_based_move = self.uniq(all_possible_rule_based_move)
-        return all_possible_rule_based_move
+        
+        if len(self.winningMoveList) >0:
+            self.all_pattern_move={"Win": self.winningMove}
+        elif len(self.opponentWinMove) >0:
+            self.all_pattern_move={"BlockWin": self.opponentWinMove}
+        elif len(self.movesCreateOpenFour) >0:
+            self.all_pattern_move={"OpenFour": self.movesCreateOpenFour}
+        elif len(blockOpponentOpenFour) >0:
+            self.all_pattern_move={"BlockOpenFour": self.blockOpponentOpenFour}
+        else:
+            self.all_pattern_move = {"Random": possibleMoves}
+        return all_possible_rule_based_move, self.all_pattern_move
 
