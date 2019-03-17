@@ -388,11 +388,18 @@ Random: if none of the previous cases applies, then generate a move uniformly at
         
         moves,self.Dict = current_board.ScanBoard(allMoves)
         key = list(self.Dict.keys())[0]
-        print("keys:",key)
         moveList = self.Dict.get(key)
-        moveList = str(moveList)
-        respondMessage = key + ' '+moveList
-        self.respond(respondMessage)
+        moveList.sort()
+        respondMessage = key + ' '       
+        for i in moveList:
+            move_coord = point_to_coord(i, self.board.size)  
+            move_as_string = str(format_point(move_coord))
+            respondMessage += move_as_string
+            
+        if len(self.Dict[key]) == 0:
+            self.respond()
+        else:
+            self.respond(respondMessage)
         
         
     
