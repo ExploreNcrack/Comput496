@@ -369,6 +369,8 @@ class SimpleGoBoard(object):
             return False
         self.board[point] = color
         self.moves.append(point)
+        print("moves:",self.moves)
+        print("aaaaaaaaaaaaaaaaaaaaaaa")
         self.current_player = GoBoardUtil.opponent(color)
         return True
 
@@ -567,7 +569,6 @@ class SimpleGoBoard(object):
         score = 0
         self.weConnectFree4 = []
         self.movesCreateOpenFour = []  
-        self.winningMove = []
         # check horizontal
         score += self.check_direction_connect_and_compute_score_attck(point, 1)
         if len(self.weConnectFree4) >= 1:
@@ -622,9 +623,9 @@ class SimpleGoBoard(object):
                     self.opponentWinMove.append(p+d)
             #if the next shift dosen't reach boarder            
             if p+2*d < len(self.board):
-                if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
+                #if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
                     # " OOO.OO"
-                    self.movesCreateOpenFour.append(p+d)
+                    #self.movesCreateOpenFour.append(p+d)
                 if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY :  
                     #" .OOO.."  p+d is the move that can prevents the opponent from getting an open four
                     self.blockOpponentOpenFour.append(p+d)
@@ -651,9 +652,9 @@ class SimpleGoBoard(object):
                     #p+d is the move that the opponent can immediately win                
                     self.opponentWinMove.append(p+d) 
             if (p+ 2*d )< len(self.board): 
-                if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
+                #if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
                     # " OOO.OO"
-                    self.movesCreateOpenFour.append(p+d)            
+                    #self.movesCreateOpenFour.append(p+d)            
                 if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY : 
                     #" ..OOO." p+d is the move that can prevents the opponent from getting an open four
                     self.blockOpponentOpenFour.append(p+d)     
@@ -720,6 +721,7 @@ class SimpleGoBoard(object):
         """
         
         possibleMovesWithScore = []
+        self.winningMove = []        
         all_possible_rule_based_move = []
         """attack-moves for current player:   1.win   """
         for m in possibleMoves:
@@ -731,9 +733,9 @@ class SimpleGoBoard(object):
         # check if opponent win immediately
         if self.check_if_opponent_has_immediate_win():
             # self.opponentWinMove is a list contains the move that blocks ".OOOO." Even if you cannot prevent the win
-            possibleMoves = self.opponentWinMove
+            #possibleMoves = self.opponentWinMove
             #need to find move to block " OO.OO" 
-            all_possible_rule_based_move += possibleMoves
+            all_possible_rule_based_move += self.opponentWinMove
         """3. openFour"""
         all_possible_rule_based_move += self.movesCreateOpenFour
         """4. block openFour"""

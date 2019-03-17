@@ -1,0 +1,98 @@
+# test 1
+clear_board
+boardsize 5
+play b a1
+play w b3
+play b a2
+play w b4
+play b a3
+play w b5
+play b a4
+play w c1
+play b b1
+play w c2
+play b b2
+play w c3
+play b d1
+play w c4
+play b d2
+play w e1
+play b d3 
+play w e2
+play b e5
+play w a5
+play b c5
+00 solve
+#? [draw D5]
+showboard
+# board condition for above case
+# [[1 1 2 1 2]
+#  [1 1 2 1 2]
+#  [1 2 2 1 0]
+#  [1 2 2 0 0]
+#  [2 2 1 0 1]]
+
+
+# test 2
+clear_board
+boardsize 5
+play b a1
+play w b3
+play b a2
+play w b4
+play b a3
+play w b5
+play b a4
+play w c1
+play b b1
+play w c2
+play b b2
+play w c3
+play b d1
+play w c4
+play b d2
+play w e1
+play b d3 
+play w e2
+play b e5
+01 solve
+#? [w C5]
+showboard
+# board condition for above case
+# [[1 1 2 1 2]
+#  [1 1 2 1 2]
+#  [1 2 2 1 0]
+#  [1 2 2 0 0]
+#  [0 2 0 0 1]]
+
+
+# test 3
+clear_board
+boardsize 5
+play b a1
+play w b3
+play b a2
+play w b4
+play b a3
+play w b5
+play b a4
+play w c1
+play b b1
+play w c2
+play b b2
+play w c3
+play b d1
+play w c4
+play b d2
+play w e1
+play b d3 
+play w e2
+02 solve
+#? [b A5]
+showboard
+# board condition for above case
+# [[1 1 2 1 2]
+#  [1 1 2 1 2]
+#  [1 2 2 1 0]
+#  [1 2 2 0 0]
+#  [0 2 0 0 0]]

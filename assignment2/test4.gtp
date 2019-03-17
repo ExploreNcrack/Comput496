@@ -288,7 +288,7 @@ play B E1
 play W F1
 play B G1
 80 solve
-#?[draw G2|draw G3]
+#?[draw G3]
 
 clear_board
 play B A7
@@ -427,4 +427,3 @@ play B E3
 play W G2
 200 solve
 #?[b C5]
-
