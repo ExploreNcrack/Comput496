@@ -285,7 +285,9 @@ class GtpConnection():
             # reset the board for every simulation
             current_board = self.board.copy()      
             current_board.play_move_gomoku(move, current_board.current_player)
+
             winner = self.simulate(current_board, current_board.current_player)
+
             stats[winner] += 1
             i+=1
             #self.board.resetToMoveNumber(moveNr)
@@ -317,13 +319,18 @@ class GtpConnection():
             if len(all_possible_rule_based_move) == 0:   #random play
                 random.shuffle(allMoves)            
                 state.play_move_gomoku(allMoves[0], state.current_player)
+
                 print("play random move",allMoves[0])
+
         
             else:  
                 # rule-based play   
                 state.play_move_gomoku(all_possible_rule_based_move[0], state.current_player)
-                print("play rule based move",all_possible_rule_based_move[0])
+
+                print("play rule based move")
             game_end, winner = state.check_game_end_gomoku()
+            self.respond('\n' + self.board2d())
+
             #the while loop won't terminate, use j to test 
             #if j==20:
                 #break
