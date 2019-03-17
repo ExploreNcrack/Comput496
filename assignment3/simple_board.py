@@ -365,11 +365,13 @@ class SimpleGoBoard(object):
             """
         assert is_black_white(color)
         assert point != PASS
+       # print("point:",point)
+       # print("empty points:",self.get_empty_points())
+       # print(self.board[point])
         if self.board[point] != EMPTY:
             return False
         self.board[point] = color
         self.moves.append(point)
-        print("moves:",self.moves)
         self.current_player = GoBoardUtil.opponent(color)
         return True
 
@@ -617,20 +619,20 @@ class SimpleGoBoard(object):
                     openEnd -= 1
                 break
             #if the next shift dosen't reach boarder
-            if p+d < len(self.board):
+            if p+d < len(self.board) and self.board[p+d] != BORDER:
                 if count == 4 and self.board[p+d]== EMPTY:  
                     #p+d is the move that the opponent can immediately win
                     self.opponentWinMove.append(p+d)
             #if the next shift dosen't reach boarder            
-            if p+2*d < len(self.board):
+            if p+2*d < len(self.board) and  self.board[p+d] == EMPTY:
                 #if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
                     # " OOO.OO"
                     #self.movesCreateOpenFour.append(p+d)
-                if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY :  
+                if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY  :  
                     #" .OOO.."  p+d is the move that can prevents the opponent from getting an open four
                     self.blockOpponentOpenFour.append(p+d)
             
-                if count ==2 and openEnd == 2 and self.board[p+2*d] == color and self.board[p+3*d] == EMPTY:
+                if count ==2 and openEnd == 2 and self.board[p+2*d] == color and self.board[p+3*d] == EMPTY :
                     #  ".OO.O."
                     self.blockOpponentOpenFour.append(p+d)
                 
@@ -647,18 +649,18 @@ class SimpleGoBoard(object):
                 if self.board[p] != EMPTY:
                     openEnd -= 1
                 break
-            if (p+d )< len(self.board):
+            if (p+d )< len(self.board) and self.board[p+d] != BORDER:
                 if count == 4 and self.board[p+d]== EMPTY:
                     #p+d is the move that the opponent can immediately win                
                     self.opponentWinMove.append(p+d) 
-            if (p+ 2*d )< len(self.board): 
+            if (p+ 2*d )< len(self.board) and  self.board[p+d] == EMPTY: 
                 #if count == 3 and self.board[p+d] == EMPTY and self.board[p+2*d] == color and self.board[p+3*d]==color:
                     # " OOO.OO"
                     #self.movesCreateOpenFour.append(p+d)            
                 if count == 3 and  openEnd == 2 and self.board[p+2*d]==EMPTY : 
                     #" ..OOO." p+d is the move that can prevents the opponent from getting an open four
                     self.blockOpponentOpenFour.append(p+d)     
-                if count ==2 and openEnd == 2 and self.board[p+2*d] == color and self.board[p+3*d] == EMPTY:
+                if count ==2 and openEnd == 2 and self.board[p+2*d] == color and self.board[p+3*d] == EMPTY :
                     #  ".O.OO."
                     self.blockOpponentOpenFour.append(p+d)
                 
