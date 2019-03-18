@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/python3
 # Set the path to your python3 above
 
 from gtp_connection import GtpConnection
@@ -13,7 +13,7 @@ class Gomoku():
         Passe/resigns only at the end of game.
 
         """
-        self.name = "GomokuAssignment2"
+        self.name = "GomokuAssignment3"
         self.version = 1.0
         
     def get_move(self, board, color):
@@ -27,5 +27,4 @@ def run():
     con = GtpConnection(Gomoku(), board)
     con.start_connection()
 
-if __name__=='__main__':
-    run()
+
