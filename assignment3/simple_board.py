@@ -597,7 +597,7 @@ class SimpleGoBoard(object):
         score += self.check_direction_block_connect_and_compute_score_defend(point, self.NS-1)
         return score 
 
-    def direction_check_opponent_point(self, point, shift, color):
+    def direction_check_opponent_point(self, point, shift, color, flag):
         count = 1
         d = shift
         p = point
@@ -623,14 +623,16 @@ class SimpleGoBoard(object):
                 if self.board[p] != EMPTY:
                     openEnd -= 1
                 break
-        if count >= 5 and point not in self.opponentWinMove:
+
+        if count >= 5 and point not in self.opponentWinMove and flag:
             self.opponentWinMove.append(point)
 
-        # if openEnd == 2 and len(connectSet) == 3:
-        #     if point not in self.opponentConnectFree3
-        #     self.opponentConnectFree3.append(cs)
+        if openEnd == 2 and len(connectSet) == 3 and not flag:
+            cs = set(connectSet)
+            if cs not in self.opponentConnectFree3:
+                self.opponentConnectFree3.append(cs)
                
-        elif openEnd == 2 and len(connectSet) == 4:
+        elif openEnd == 2 and len(connectSet) == 4 and flag:
             if point not in self.blockOpponentOpenFour:
                 self.blockOpponentOpenFour.append(point)
         
@@ -640,25 +642,38 @@ class SimpleGoBoard(object):
         self.opponentConnectFree3 = []
         self.opponentConnectFree4 = []
         self.blockOpponentOpenFour = []
-        opponentPoints = self.get_oppoent_points()
-        if len(opponentPoints) < 4:
-            return False
+        opponentPoints = self.get_empty_points()
+        
         color = GoBoardUtil.opponent(self.current_player)
         for point in opponentPoints:
             # check horizontal 
-            self.direction_check_opponent_point(point, 1, color)
+            self.direction_check_opponent_point(point, 1, color, True)
             
             # check vertical
-            self.direction_check_opponent_point(point, self.NS, color)
+            self.direction_check_opponent_point(point, self.NS, color, True)
             
             # check y=x
-            self.direction_check_opponent_point(point, self.NS+1, color)
+            self.direction_check_opponent_point(point, self.NS+1, color, True)
            
             # check y=-x
-            self.direction_check_opponent_point(point, self.NS-1, color)
-            
+            self.direction_check_opponent_point(point, self.NS-1, color, True)
         
-        return False
+        opponentPoints = self.get_oppoent_points()
+        color = GoBoardUtil.opponent(self.current_player)
+        for point in opponentPoints:
+            # check horizontal 
+            self.direction_check_opponent_point(point, 1, color, False)
+            
+            # check vertical
+            self.direction_check_opponent_point(point, self.NS, color, False)
+            
+            # check y=x
+            self.direction_check_opponent_point(point, self.NS+1, color, False)
+           
+            # check y=-x
+            self.direction_check_opponent_point(point, self.NS-1, color, False)
+        
+        
     
     
     def uniq(self,input):
@@ -709,6 +724,32 @@ class SimpleGoBoard(object):
         
         all_possible_rule_based_move = self.uniq(all_possible_rule_based_move)
         
+        for oneset in self.opponentConnectFree3:
+            sorted_set = sorted(list(oneset))
+            Max = sorted_set[-1]
+            Min = sorted_set[0]
+            direction = abs(sorted_set[1]-sorted_set[0])
+            if self.board[Min-direction] == EMPTY and \
+                self.board[Min-2*direction] == BORDER and \
+                self.board[Max+direction] == EMPTY and \
+                self.board[Max+2*direction] == EMPTY:
+                    if Min-direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Min-direction)
+                    if Max+direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Max+direction)
+                    if Max+2*direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Max+2*direction)
+            if self.board[Max+direction] == EMPTY and \
+                self.board[Max+2*direction] == BORDER and \
+                self.board[Min-direction] == EMPTY and \
+                self.board[Min-2*direction] == EMPTY:
+                    if Max+direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Max+direction)
+                    if Min-direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Min-direction)
+                    if Min-2*direction not in self.blockOpponentOpenFour:
+                        self.blockOpponentOpenFour.append(Min-2*direction)
+
         if len(self.winningMoveList) >0:
             self.all_pattern_move={"Win": self.winningMove}
         elif len(self.opponentWinMove) >0:

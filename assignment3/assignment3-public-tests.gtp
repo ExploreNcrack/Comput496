@@ -175,7 +175,6 @@ play B B3
 play W C4
 play B B4
 
-showboard
 70 policy_moves
 #?[BlockWin B5]
 
@@ -201,8 +200,21 @@ play W A3
 play B D4
 
 120 policy_moves
-#?[BlockOpenFour D1 D5]
+#?[BlockOpenFour D1 D5 D6]
 
 boardsize 6
 130 policy_moves
 #?[Random A1 A2 A3 A4 A5 A6 B1 B2 B3 B4 B5 B6 C1 C2 C3 C4 C5 C6 D1 D2 D3 D4 D5 D6 E1 E2 E3 E4 E5 E6 F1 F2 F3 F4 F5 F6] 
+
+boardsize 8
+clear_board
+
+play B A3
+play W D1
+play B A4
+play W D2
+play B A5
+policy rule_based 
+
+140 policy_moves
+#?[BlockOpenFour A2 A6]

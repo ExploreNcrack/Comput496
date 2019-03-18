@@ -14,6 +14,8 @@ import numpy as np
 import re
 import random 
 
+debug = False
+
 class GtpConnection():
 
     def __init__(self, go_engine, board, debug_mode = False):
@@ -275,6 +277,7 @@ class GtpConnection():
         bestIndex = score.index(max(score))
         best = moves[bestIndex]
         self.board = current_board
+        self.board.play_move_gomoku(best, color)
         move_coord = point_to_coord(best, self.board.size)  
         move_as_string = format_point(move_coord)
         self.respond(move_as_string)
@@ -307,7 +310,7 @@ class GtpConnection():
     
     """default to do rule-based simulation, if no moves to play, then do the random simulation"""
     def simulate(self,state,color):
-        print("---------")
+        # print("---------")
         game_end, winner = state.check_game_end_gomoku()
         if game_end:
             return winner
@@ -393,14 +396,18 @@ Random: if none of the previous cases applies, then generate a move uniformly at
         allMoves = GoBoardUtil.generate_legal_moves_gomoku(current_board) 
         
         moves,self.Dict = current_board.ScanBoard(allMoves)
+        if debug: 
+            print(self.Dict)
+
         key = list(self.Dict.keys())[0]
         moveList = self.Dict.get(key)
-        moveList.sort()
-        respondMessage = key + ' '       
+        # moveList.sort()
+        movesL = [] 
         for i in moveList:
             move_coord = point_to_coord(i, self.board.size)  
             move_as_string = str(format_point(move_coord))
-            respondMessage += move_as_string
+            movesL.append(move_as_string)
+        respondMessage = key + " "+" ".join(sorted(movesL))      
             
         if len(self.Dict[key]) == 0:
             self.respond()
