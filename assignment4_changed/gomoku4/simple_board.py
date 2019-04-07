@@ -13,6 +13,7 @@ import numpy as np
 from board_util import GoBoardUtil, BLACK, WHITE, EMPTY, BORDER, \
                        PASS, is_black_white, coord_to_point, where1d, \
                        MAXSIZE, NULLPOINT
+import alphabeta
 
 class SimpleGoBoard(object):
 
@@ -80,13 +81,14 @@ class SimpleGoBoard(object):
     def get_oppoent_points(self):
         return where1d(self.board == GoBoardUtil.opponent(self.current_player))
 
+
     def __init__(self, size):
         """
         Creates a Go board of given size
         """
-        assert 2 <= size <= MAXSIZE
         self.evaluateOnAttack = {1:1, 2:500, 3:1300, 4:2000, 5:10000000}
         self.evaluateOnDefend = {0:0, 1:200, 2:400, 3:2100, 4:100000, 5:100000000000}
+        assert 2 <= size <= MAXSIZE
         self.reset(size)
 
     def reset(self, size):
@@ -96,7 +98,6 @@ class SimpleGoBoard(object):
         See GoBoardUtil.coord_to_point for explanations of the array encoding
         """
         self.size = size
-        self.moves = []
         self.NS = size + 1
         self.WE = 1
         self.ko_recapture = None
@@ -115,7 +116,6 @@ class SimpleGoBoard(object):
         b.current_player = self.current_player
         assert b.maxpoint == self.maxpoint
         b.board = np.copy(self.board)
-        b.moves = self.moves
         return b
 
     def row_start(self, row):
@@ -368,28 +368,9 @@ class SimpleGoBoard(object):
         if self.board[point] != EMPTY:
             return False
         self.board[point] = color
-        self.moves.append(point)
         self.current_player = GoBoardUtil.opponent(color)
         return True
-
-    def undoMove(self):
-        """
-        Go back to the previous board state 
-        by 
-        """
-        point = self.moves.pop()
-        self.board[point] = EMPTY
-        self.current_player = GoBoardUtil.opponent(self.current_player)
-
-    def code(self):
-        """
-        hash code 
-        """
-        c = 0
-        for i in range(self.size):
-            c = 3*c + self.board[i]
-        return c
-
+        
     def _point_direction_check_connect_gomoko(self, point, shift):
         """
         Check if the point has connect5 condition in a direction
@@ -459,7 +440,109 @@ class SimpleGoBoard(object):
 
         return False, None
 
+    def solve(self):
+        result, move, drawMove = alphabeta.solve(self)
+        if move=="First":
+            if result==0:
+                return 'draw',drawMove
+            else:
+                winner='w' if self.current_player!=WHITE else 'b'
+                return winner,'NoMove'
+        elif move=="NoMove":
+            if result:
+                return 'draw', drawMove
+            else:
+                winner='w' if self.current_player!=WHITE else 'b'
+                return winner, move
+        else:
+            winner='w' if self.current_player==WHITE else 'b'
+            return winner, move
 
+    def check_pattern(self,point,have,direction_x,direction_y,moveSet,patternList,color,flag):
+        for i in range(0,4):
+            if have in patternList[i]:
+                for dis in patternList[i][have]:
+                    moveSet[i].add(point-direction_x*(dis+1)-direction_y*self.NS*(dis+1))
+                #flag[0]=True
+                break
+        if (not (0<= point<len(self.board))) or len(have)==9:
+            return
+#if self.get_color(point)==BORDER or len(have)==7:
+#            return
+        piece=self.get_color(point)
+        if piece==EMPTY:
+            piece='.'
+        elif piece==color:
+            piece='x'
+        elif piece == BORDER:
+            piece='B'
+        else:
+            piece='o'
+        have+=piece
+        #print(GoBoardUtil.format_point(self._point_to_coord(point)),have,self.board[point])
+        self.check_pattern(point+direction_x+direction_y*self.NS,have,direction_x,direction_y,moveSet,patternList,color,flag)
+
+    def get_pattern_moves(self):
+        """
+        1. direct winning point xxxx. x.xxx xx.xx
+        2. urgent blocking point xoooo.
+        3. wining in 2 step point
+        """
+        moveSet=[set(),set(),set(),set()]
+        color=self.current_player
+
+        patternList=[{'xxxx.':{0},'xxx.x':{1},'xx.xx':{2},'x.xxx':{3},'.xxxx':{4}}, #win
+                     {'oooo.':{0},'ooo.o':{1},'oo.oo':{2},'o.ooo':{3},'.oooo':{4}}, #block win
+                     {'.xxx..':{1},'..xxx.':{4},'.xx.x.':{2},'.x.xx.':{3}}, #make-four
+                     {'.ooo..':{1,5},'..ooo.':{0,4},'.oo.o.':{0,2,5},'.o.oo.':{0,3,5}, 'B.ooo..':{0}, '..ooo.B':{6},
+                     'x.ooo..':{0}, '..ooo.x':{6} #block-open-four
+                     }]
+
+        direction_x=[1,0,1,-1]
+        direction_y=[0,1,1,1]
+        flag=[False]
+
+        for point in range(0, len(self.board)):
+            if flag[0]:
+                break
+            for direction in range(0,4):
+                    self.check_pattern(point,'',direction_x[direction],direction_y[direction],moveSet,patternList,color,flag)
+        
+        i=0
+        while i<4 and not bool(moveSet[i]): i+=1
+        if i==4:
+            return None
+        else:
+            return i, list(moveSet[i])
+            
+    def list_solve_point(self):
+        """
+        1. direct winning point xxxx. x.xxx xx.xx
+        2. urgent blocking point xoooo.
+        3. wining in 2 step point
+        """
+        moveSet=[set(),set(),set(),set()]
+        color=self.current_player
+
+        patternList=[{'xxxx.':{0},'xxx.x':{1},'xx.xx':{2},'x.xxx':{3},'.xxxx':{4}},{'oooo.':{0},'ooo.o':{1},'oo.oo':{2},'o.ooo':{3},'.oooo':{4}},{'.xxx..':{1},'..xxx.':{4},'.xx.x.':{2},'.x.xx.':{3}},{'.ooo..':{1,5},'..ooo.':{0,4},'.oo.o.':{2},'.o.oo.':{3}}]
+
+        direction_x=[1,0,1,-1]
+        direction_y=[0,1,1,1]
+        flag=[False]
+
+        for point in where1d(self.board!=BORDER):
+            if flag[0]:
+                break
+            for direction in range(0,4):
+                    self.check_pattern(point,'',direction_x[direction],direction_y[direction],moveSet,patternList,color,flag)
+        
+        i=0
+        while i<4 and not bool(moveSet[i]):
+            i+=1
+        if i==4:
+            return None
+        else:
+            return list(moveSet[i])
     def check_direction_connect_and_compute_score_attck(self, point, shift):
         color = self.current_player
         count = 1
@@ -686,11 +769,11 @@ class SimpleGoBoard(object):
                 possibleMoves[0] = move[0]
                 return possibleMoves
         # check if opponent win immediately
-        if self.check_if_opponent_has_immediate_win():
-            # prune this search because this will lead to lose
-            # print("check")
-            possibleMoves = []
-            return possibleMoves
+        # if self.check_if_opponent_has_immediate_win():
+        #     # prune this search because this will lead to lose
+        #     # print("check")
+        #     possibleMoves = []
+        #     return possibleMoves
         
 
         # defense evaluation
@@ -705,4 +788,3 @@ class SimpleGoBoard(object):
             possibleMoves[index] = move[0]
             # self.board[move[0]] = int(move[1])
         return possibleMoves
-
